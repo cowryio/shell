@@ -1,7 +1,7 @@
 package main 
 
 import (
-	"../shell"
+	shell "../"
 	"time"
 )
 
