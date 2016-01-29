@@ -2,7 +2,7 @@ package uuid_test
 
 import (
 	"fmt"
-	"github.com/cowryio/shell-go/shell/Godeps/_workspace/src/github.com/nu7hatch/gouuid"
+	"github.com/cowryio/shell/Godeps/_workspace/src/github.com/nu7hatch/gouuid"
 )
 
 func ExampleNewV4() {

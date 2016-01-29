@@ -1,7 +1,7 @@
 package shell
 
 import "testing"
-import "github.com/cowryio/shell-go/shell/Godeps/_workspace/src/github.com/stretchr/testify/assert"
+import "github.com/cowryio/shell/Godeps/_workspace/src/github.com/stretchr/testify/assert"
 
 // TestByteArrToString tests that a byte array is properly converted to string
 func TestByteArrToString(t *testing.T) {

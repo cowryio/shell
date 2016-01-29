@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/cowryio/shell-go/shell",
+	"ImportPath": "github.com/cowryio/shell",
 	"GoVersion": "go1.4.2",
 	"Deps": [
 		{

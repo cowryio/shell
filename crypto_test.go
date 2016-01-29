@@ -1,7 +1,7 @@
 package shell
 
 import "testing"
-import "github.com/cowryio/shell-go/shell/Godeps/_workspace/src/github.com/stretchr/testify/assert"
+import "github.com/cowryio/shell/Godeps/_workspace/src/github.com/stretchr/testify/assert"
 
 // TestParsePublicKey tests that public key is valid
 func TestParseGoodPublicKey(t *testing.T) {
