@@ -1,12 +1,12 @@
 package shell
 
 import "testing"
-import "github.com/stretchr/testify/assert"
+import "github.com/cowryio/shell-go/shell/Godeps/_workspace/src/github.com/stretchr/testify/assert"
 
 // TestInvalidJSON tests that an invalid json string returns an error
 func TestInvalidJSON(t *testing.T) {
 	var str = `{ "meta : "" }`
-	err := Validate(str); 
+	err := Validate(str)
 	assert.NotNil(t, err)
 	expectedMsg := `unable to parse json string`
 	assert.Equal(t, expectedMsg, err.Error())
@@ -15,7 +15,7 @@ func TestInvalidJSON(t *testing.T) {
 // TestMetaMustHaveShellIDProperty tests that a meta block data must have a `shell_id` property
 func TestMetaMustHaveShellIDProperty(t *testing.T) {
 	var d = make(map[string]interface{})
-	err := ValidateMetaBlock(d); 
+	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
 	expectedMsg := "`meta` block is missing `shell_id` property"
 	assert.Equal(t, expectedMsg, err.Error())
@@ -35,7 +35,7 @@ func TestMetaMustHaveShellTypeProperty(t *testing.T) {
 // TestMetaMustHaveCreatedAtProperty tests that created_at property is set
 func TestMetaMustHaveCreatedAtProperty(t *testing.T) {
 	d := map[string]interface{}{
-		"shell_id": 1234,
+		"shell_id":   1234,
 		"shell_type": "coupon",
 	}
 	err := ValidateMetaBlock(d)
@@ -44,15 +44,14 @@ func TestMetaMustHaveCreatedAtProperty(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-
 // TestShellIDNotString tests that shell_id value type must be string
 func TestShellIDMustString(t *testing.T) {
 	d := map[string]interface{}{
-		"shell_id": 1234,
+		"shell_id":   1234,
 		"shell_type": "coupon",
 		"created_at": 1000,
 	}
-	err := ValidateMetaBlock(d);
+	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
 	expectedMsg := "`meta.shell_id` value type is invalid. Expects string value"
 	assert.Equal(t, expectedMsg, err.Error())
@@ -61,7 +60,7 @@ func TestShellIDMustString(t *testing.T) {
 // TestShellIDLengthInvalid tests that a shell_id must have 40 characters
 func TestShellIDLengthInvalid(t *testing.T) {
 	d := map[string]interface{}{
-		"shell_id": "abcd",
+		"shell_id":   "abcd",
 		"shell_type": "coupon",
 		"created_at": 1000,
 	}
@@ -74,7 +73,7 @@ func TestShellIDLengthInvalid(t *testing.T) {
 // TestShellTypeMustBeString tests that shell_type value type must be string
 func TestShellTypeMustBeString(t *testing.T) {
 	d := map[string]interface{}{
-		"shell_id": Sha1("abcd"),
+		"shell_id":   Sha1("abcd"),
 		"shell_type": 123,
 		"created_at": 1000,
 	}
@@ -87,7 +86,7 @@ func TestShellTypeMustBeString(t *testing.T) {
 // TestCreatedAtMustBeNumber tests that created_at value type must be a number
 func TestCreatedAtMustBeNumber(t *testing.T) {
 	d := map[string]interface{}{
-		"shell_id": Sha1("abcd"),
+		"shell_id":   Sha1("abcd"),
 		"shell_type": "coupon",
 		"created_at": "111",
 	}
@@ -100,7 +99,7 @@ func TestCreatedAtMustBeNumber(t *testing.T) {
 // TestCreatedAtBeforeStartTime test that a created_at time before the start/launch time is invalid
 func TestCreatedAtBeforeStartTime(t *testing.T) {
 	d := map[string]interface{}{
-		"shell_id": Sha1("abcd"),
+		"shell_id":   Sha1("abcd"),
 		"shell_type": "coupon",
 		"created_at": 100000,
 	}
@@ -133,7 +132,7 @@ func TestMetaSignatureTypeMustBeString(t *testing.T) {
 // TestOwnershipSignatureTypeMustBeString tests that when `ownership` property is set, it's value type must be string
 func TestOwnershipSignatureTypeMustBeString(t *testing.T) {
 	d := map[string]interface{}{
-		"meta": "abcde",
+		"meta":      "abcde",
 		"ownership": 100,
 	}
 	err := ValidateSignaturesBlock(d)
@@ -145,8 +144,8 @@ func TestOwnershipSignatureTypeMustBeString(t *testing.T) {
 // TestAttributesSignatureTypeMustBeString tests that when `attributes` property is set, it's value type must be string
 func TestAttributesSignatureTypeMustBeString(t *testing.T) {
 	d := map[string]interface{}{
-		"meta": "abcde",
-		"ownership": "abcde",
+		"meta":       "abcde",
+		"ownership":  "abcde",
 		"attributes": 100,
 	}
 	err := ValidateSignaturesBlock(d)
@@ -158,7 +157,7 @@ func TestAttributesSignatureTypeMustBeString(t *testing.T) {
 // TestMustHaveMetaBlock tests that a json string must have a `meta` property
 func TestMustHaveMetaBlock(t *testing.T) {
 	var str = `{ "signatures": {}}`
-	err := Validate(str); 
+	err := Validate(str)
 	assert.NotNil(t, err)
 	expectedMsg := "missing `meta` block"
 	assert.Equal(t, expectedMsg, err.Error())
@@ -167,7 +166,7 @@ func TestMustHaveMetaBlock(t *testing.T) {
 // TestInvalidMetaValueType tests that the `meta` block/property value type must be a JSON object
 func TestInvalidMetaValueType(t *testing.T) {
 	var str = `{ "meta": "some stuff" }`
-	err := Validate(str); 
+	err := Validate(str)
 	assert.NotNil(t, err)
 	expectedMsg := "`meta` block value type is invalid. Expects a JSON object"
 	assert.Equal(t, expectedMsg, err.Error())
@@ -177,7 +176,7 @@ func TestInvalidMetaValueType(t *testing.T) {
 func TestMustHaveSignatureBlock(t *testing.T) {
 	var str = `{ 
 		"meta": { 
-			"shell_id": "`+Sha1("stuff")+`", 
+			"shell_id": "` + Sha1("stuff") + `", 
 			"shell_type": "cur", 
 			"created_at": 1453975575 
 		} 
@@ -193,7 +192,7 @@ func TestInvalidSignaturesBlockValueType(t *testing.T) {
 	var str = `{ 
 		"signatures": "a_string", 
 		"meta": { 
-			"shell_id": "`+Sha1("stuff")+`", 
+			"shell_id": "` + Sha1("stuff") + `", 
 			"shell_type": "cur", 
 			"created_at": 1453975575 
 		} 
@@ -211,7 +210,7 @@ func TestInvalidOwnershipBlockValueType(t *testing.T) {
 			"meta": "abcde"
 		}, 
 		"meta": { 
-			"shell_id": "`+Sha1("stuff")+`", 
+			"shell_id": "` + Sha1("stuff") + `", 
 			"shell_type": "cur", 
 			"created_at": 1453975575 
 		},
@@ -223,7 +222,7 @@ func TestInvalidOwnershipBlockValueType(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestSignaturesBlockMustHaveOwnershipProperty tests that whenever `ownership` block is set, 
+// TestSignaturesBlockMustHaveOwnershipProperty tests that whenever `ownership` block is set,
 // `signatures` block must have `ownership` property
 func TestSignaturesBlockMustHaveOwnershipProperty(t *testing.T) {
 	var str = `{ 
@@ -231,7 +230,7 @@ func TestSignaturesBlockMustHaveOwnershipProperty(t *testing.T) {
 			"meta": "abcde"
 		}, 
 		"meta": { 
-			"shell_id": "`+Sha1("stuff")+`", 
+			"shell_id": "` + Sha1("stuff") + `", 
 			"shell_type": "cur", 
 			"created_at": 1453975575 
 		},
@@ -251,7 +250,7 @@ func TestInvalidAttributesBlockValueType(t *testing.T) {
 			"ownership": "abcde"
 		}, 
 		"meta": { 
-			"shell_id": "`+Sha1("stuff")+`", 
+			"shell_id": "` + Sha1("stuff") + `", 
 			"shell_type": "cur", 
 			"created_at": 1453975575 
 		},
@@ -264,7 +263,7 @@ func TestInvalidAttributesBlockValueType(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestSignaturesBlockMustHaveAttributesProperty tests that whenever `attributes` block is set, 
+// TestSignaturesBlockMustHaveAttributesProperty tests that whenever `attributes` block is set,
 // `signatures` block must have `attributes` property
 func TestSignaturesBlockMustHaveAttributesProperty(t *testing.T) {
 	var str = `{ 
@@ -273,7 +272,7 @@ func TestSignaturesBlockMustHaveAttributesProperty(t *testing.T) {
 			"ownership": "abcde"
 		}, 
 		"meta": { 
-			"shell_id": "`+Sha1("stuff")+`", 
+			"shell_id": "` + Sha1("stuff") + `", 
 			"shell_type": "cur", 
 			"created_at": 1453975575 
 		},
@@ -285,4 +284,3 @@ func TestSignaturesBlockMustHaveAttributesProperty(t *testing.T) {
 	expectedMsg := "missing `attributes` property in `signatures` block"
 	assert.Equal(t, expectedMsg, err.Error())
 }
-

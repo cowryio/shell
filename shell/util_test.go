@@ -1,9 +1,9 @@
 package shell
 
 import "testing"
-import "github.com/stretchr/testify/assert"
+import "github.com/cowryio/shell-go/shell/Godeps/_workspace/src/github.com/stretchr/testify/assert"
 
-// TestByteArrToString tests that a byte array is properly converted to string 
+// TestByteArrToString tests that a byte array is properly converted to string
 func TestByteArrToString(t *testing.T) {
 	var s = ByteArrToString([]byte("hello"))
 	assert.Equal(t, s, "hello")
@@ -23,18 +23,17 @@ func TestNewID(t *testing.T) {
 
 // TestValueNotInStringSlice tests that a string value is not contained in a string slice
 func TestValueNotInStringSlice(t *testing.T) {
-	var ss = []string{ "john", "doe" }
+	var ss = []string{"john", "doe"}
 	var r = InStringSlice(ss, "jane")
 	assert.Equal(t, r, false)
 }
-
 
 // TestGetMapKeys tests that GetMapKeys will return a list of all keys it contains
 func TestGetMapKeys(t *testing.T) {
 	var keys = GetMapKeys(map[string]interface{}{
 		"key1": "0",
-		"key2": "1", 	
-	});
+		"key2": "1",
+	})
 	r := InStringSlice(keys, "key1")
 	r2 := InStringSlice(keys, "key2")
 	assert.Equal(t, len(keys), 2)
@@ -45,11 +44,11 @@ func TestGetMapKeys(t *testing.T) {
 // TestGetCanonicalMapString tests that a predictable, normalized string version of a map is returned
 func TestGetCanonicalMapString(t *testing.T) {
 	var m = map[string]interface{}{
-		"pete": 2,
+		"pete":    2,
 		"abraham": 30,
-		"jamie": "jedi",
+		"jamie":   "jedi",
 		"zebra": map[string]interface{}{
-			"xonia": "fighter",
+			"xonia":  "fighter",
 			"belami": "protector",
 		},
 	}
@@ -76,7 +75,7 @@ func TestIsStringValue(t *testing.T) {
 
 // TestValueInStringSlice tests that a string value is contained in a string slice or not
 func TestValueInStringSlice(t *testing.T) {
-	var ss = []string{ "john", "doe" }
+	var ss = []string{"john", "doe"}
 	assert.Equal(t, InStringSlice(ss, "john"), true)
 	assert.Equal(t, InStringSlice(ss, "jane"), false)
 }

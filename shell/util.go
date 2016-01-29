@@ -2,24 +2,24 @@
 package shell
 
 import (
-	"fmt"
 	"crypto/sha1"
-	"github.com/nu7hatch/gouuid"
+	"fmt"
+	"github.com/cowryio/shell-go/shell/Godeps/_workspace/src/github.com/nu7hatch/gouuid"
+	"math/rand"
+	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
-	"os"
-	"math/rand"
-	"strconv"
 )
 
-func Println(any... interface{}) {
-	fmt.Println(any...);
+func Println(any ...interface{}) {
+	fmt.Println(any...)
 }
 
 // convert a byte array to string
 func ByteArrToString(byteArr []byte) string {
-	return fmt.Sprintf("%s", byteArr);
+	return fmt.Sprintf("%s", byteArr)
 }
 
 // Generate sha1 hash
@@ -33,8 +33,8 @@ func Sha1(s string) string {
 // generate random numbers between a range
 func RandNum(min, max int) int {
 	s1 := rand.NewSource(time.Now().UnixNano())
-    r1 := rand.New(s1)
-    return r1.Intn(max - min) + min
+	r1 := rand.New(s1)
+	return r1.Intn(max-min) + min
 }
 
 // Generate an id to be used as a shell id.
@@ -43,10 +43,10 @@ func NewID() string {
 	u4, err := uuid.NewV4()
 	id := fmt.Sprintf("%s:%d", u4.String(), curTime)
 	if err != nil {
-	    return ""
+		return ""
 	}
 	return Sha1(id)
-} 
+}
 
 // Get the keys of a map
 func GetMapKeys(m map[string]interface{}) []string {
@@ -70,13 +70,13 @@ func GetCanonicalMapString(m map[string]interface{}) string {
 		val := m[key]
 		switch d := val.(type) {
 		case int:
-			cannonicalStr = append(cannonicalStr, key + ":" + strconv.Itoa(d))
+			cannonicalStr = append(cannonicalStr, key+":"+strconv.Itoa(d))
 			break
 		case string:
-			cannonicalStr = append(cannonicalStr, key + ":" + d)
+			cannonicalStr = append(cannonicalStr, key+":"+d)
 			break
 		case map[string]interface{}:
-			cannonicalStr = append(cannonicalStr, key + ":" + GetCanonicalMapString(d))
+			cannonicalStr = append(cannonicalStr, key+":"+GetCanonicalMapString(d))
 			break
 		}
 	}
@@ -164,6 +164,6 @@ func Env(key, defStr string) string {
 	val := os.Getenv(key)
 	if val == "" && defStr != "" {
 		return defStr
-	} 
+	}
 	return val
 }
