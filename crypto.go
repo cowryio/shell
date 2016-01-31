@@ -98,9 +98,18 @@ func (r *Signer) Verify(message []byte, hexEncodedSig string) error {
 	return rsa.VerifyPKCS1v15(r.PublicKey, crypto.SHA256, d, []byte(sig))
 }
 
-// convert byte slice to base64 string
+// encode byte slice to base64 string
 func ToBase64(b []byte) string {
 	return base64.StdEncoding.EncodeToString(b)
+}
+
+// decode a base64 string
+func FromBase64(b string) (string, error) {
+	bs, err := base64.StdEncoding.DecodeString(b)
+	if err != nil {
+		return "", err
+	}
+	return ByteArrToString(bs), nil
 }
 
 // convert byte slice to hex string

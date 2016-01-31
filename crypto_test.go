@@ -65,3 +65,20 @@ func TestVerifyWithPublicKey(t *testing.T) {
 		t.Errorf("could not verify signature")
 	}
 }
+
+// TestToBase64 tests that a string will a base 64 encoded string will always remain the same
+func TestToBase64(t *testing.T) {
+	str := "john doe"
+	b64Str := ToBase64([]byte(str))
+	assert.Equal(t, b64Str, "am9obiBkb2U=")
+}
+
+// TestFromBase64 tests that a base 64 encoded string will be decoded to it's expected value
+func TestFromBase64(t *testing.T) {
+	str := "john doe"
+	b64Str := ToBase64([]byte(str))
+	decStr, err := FromBase64(b64Str)
+	assert.Nil(t, err)
+	assert.NotEqual(t, decStr, "")
+	assert.Equal(t, str, decStr)
+}
