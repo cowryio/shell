@@ -5,8 +5,8 @@ package shell
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 	"fmt"
-	// "reflect"
 )
 
 type Shell struct {
@@ -101,6 +101,26 @@ func loadMap(data map[string]interface{}) (*Shell, error) {
     return shell, nil
 }
 
+// Creates a new shell from a raw json or base 64 encoded json string.
+// If the string passed in starts with "{", it is cos a JSON string, otherwise, it assumes string is base 64 encoded and
+// will attempt to decoded it. 
+func Load(shellStr string) (*Shell, error) {
+	shellStr = strings.TrimSpace(shellStr)
+	if shellStr == "" {
+		return &Shell{}, errors.New("Cannot load empty shell string")
+	} else {
+		if fmt.Sprintf("%c", shellStr[0]) == "{" {					// json string
+			return LoadJSON(shellStr)
+		} else {
+			decodedShellStr, err := FromBase64(shellStr)
+			if err != nil {
+				return &Shell{}, errors.New("unable to decode encoded shell string")
+			}
+			return LoadJSON(decodedShellStr)
+		}
+	}
+}
+
 
 // Create a shell from a json string by converting
 // it to a map and then used to load a new shell instance
@@ -115,8 +135,10 @@ func LoadJSON(jsonStr string) (*Shell, error) {
 	return loadMap(data)  
 }
 
+
 // Sign any shell block by creating a canonical string representation
-// of the block value and signing with the issuer's private key
+// of the block value and signing with the issuer's private key. The computed signature
+// is store the `signatures` block
 func(self *Shell) Sign(blockName string, privateKey string) (string, error) {
 	switch blockName {
 	case "meta":
@@ -129,6 +151,7 @@ func(self *Shell) Sign(blockName string, privateKey string) (string, error) {
 		if err != nil {
 			return "", errors.New(fmt.Sprintf("Signature Error: %v", err))
 		}
+		self.Signatures["meta"] = signature
 		return signature, nil
 	default:
 		return "", errors.New("block unknown")
