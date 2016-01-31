@@ -27,6 +27,12 @@ func initialize(shell *Shell) *Shell {
 	return shell
 }
 
+// creates an shell instances and initializes it
+func Empty() *Shell {
+	sh := &Shell{}
+	return initialize(sh)
+}
+
 // Create a shell.The new shell is immediately signed using the issuer's private key
 func Create(meta map[string]interface{}, issuerPrivateKey string) (*Shell, error) {
 
@@ -39,13 +45,11 @@ func Create(meta map[string]interface{}, issuerPrivateKey string) (*Shell, error
 
     // set shell Meta field and create a meta signature
 	shell.Meta = meta
-	metaSignature, err := shell.Sign("meta", issuerPrivateKey)
+	_, err := shell.Sign("meta", issuerPrivateKey)
 	if err != nil {
 		return &Shell{}, err
 	}
 
-	// added meta signature in signatures map
-	shell.Signatures["meta"] = metaSignature
 	return shell, nil
 }
 
@@ -156,6 +160,24 @@ func(self *Shell) Sign(blockName string, privateKey string) (string, error) {
 	default:
 		return "", errors.New("block unknown")
 	}
+}
+
+// Assign a valid meta value to the meta block
+func(self *Shell) AddMeta(meta map[string]interface{}, issuerPrivateKey string) error {
+
+	// validate meta
+	if err := ValidateMetaBlock(meta); err != nil {
+    	return err
+    }
+
+    // sign meta block
+    _, err := self.Sign("meta", issuerPrivateKey)
+	if err != nil {
+		return err
+	}
+
+    self.Meta = meta
+    return nil
 }
 
 // return shell as raw JSON string

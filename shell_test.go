@@ -108,4 +108,19 @@ func TestCannotSignUnknownBlock(t *testing.T) {
 	assert.Equal(t, err.Error(), expectedMsg)
 }
 
+// TestAddMeta tests that a meta block can be assigned and signed successful using the TestAddMeta method
+func TestAddMeta(t *testing.T) {
+	shellID := NewID()
+	var meta = map[string]interface{}{
+		"shell_id": shellID,
+		"shell_type": "currency",
+		"created_at": time.Now().Unix(),
+	}
+	sh := Empty()
+	err := sh.AddMeta(meta, TEST_ISSUER_PRIVATE_KEYS[0])
+	assert.Nil(t, err)
+	assert.Equal(t, sh.Meta["shell_id"], meta["shell_id"])
+	assert.NotNil(t, sh.Signatures["meta"])
+}
+
 
