@@ -70,6 +70,7 @@ func GetCanonicalMapString(m map[string]interface{}) string {
 		val := m[key]
 		switch d := val.(type) {
 		case int:
+		case int64:
 			cannonicalStr = append(cannonicalStr, key+":"+strconv.Itoa(d))
 			break
 		case string:

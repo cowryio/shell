@@ -12,6 +12,18 @@ func TestInvalidJSON(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
+// TestMetaBlockHasUnexpectedProperty tests that an error occurs when the meta block
+// contains an unexpected property
+func TestMetaBlockHasUnexpectedProperty(t *testing.T) {
+	d := map[string]interface{}{
+		"some_property": "abcde",
+	}
+	err := ValidateMetaBlock(d)
+	assert.NotNil(t, err)
+	expectedMsg := "`some_property` property is unexpected in `meta` block"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
 // TestMetaMustHaveShellIDProperty tests that a meta block data must have a `shell_id` property
 func TestMetaMustHaveShellIDProperty(t *testing.T) {
 	var d = make(map[string]interface{})
@@ -109,6 +121,18 @@ func TestCreatedAtBeforeStartTime(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
+// TestSignaturesBlockHasUnexpectedProperty tests that an error will occur when 
+// `signatures` block contains unexpected property
+func TestSignaturesBlockHasUnexpectedProperty(t *testing.T) {
+	d := map[string]interface{}{
+		"some_property": "abcde",
+	}
+	err := ValidateSignaturesBlock(d)
+	assert.NotNil(t, err)
+	expectedMsg := "`some_property` property is unexpected in `signatures` block"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
 // TestSignaturesBlockMustHaveMetaProperty test that signatures block must have `meta` property
 func TestSignaturesBlockMustHaveMetaProperty(t *testing.T) {
 	d := map[string]interface{}{}
@@ -141,7 +165,8 @@ func TestOwnershipSignatureTypeMustBeString(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestAttributesSignatureTypeMustBeString tests that when `attributes` property is set, it's value type must be string
+// TestAttributesSignatureTypeMustBeString tests that when `attributes` 
+// property is set, it's value type must be string
 func TestAttributesSignatureTypeMustBeString(t *testing.T) {
 	d := map[string]interface{}{
 		"meta":       "abcde",
@@ -151,6 +176,125 @@ func TestAttributesSignatureTypeMustBeString(t *testing.T) {
 	err := ValidateSignaturesBlock(d)
 	assert.NotNil(t, err)
 	expectedMsg := "`signatures.attributes` value type is invalid. Expects string value"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestMetaBlockHasUnexpectedProperty tests that an error occurs when the ownership block
+// contains an unexpected property
+func TestOwnershipBlockHasUnexpectedProperty(t *testing.T) {
+	d := map[string]interface{}{
+		"some_property": "abcde",
+	}
+	err := ValidateOwnershipBlock(d)
+	assert.NotNil(t, err)
+	expectedMsg := "`some_property` property is unexpected in `ownership` block"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestOwnershipTypePropertyMissing tests that an error occurs when 
+// `ownership` block is set with missing `type` property
+func TestOwnershipTypePropertyMissing(t *testing.T) {
+	d := map[string]interface{}{}
+	err := ValidateOwnershipBlock(d)
+	assert.NotNil(t, err)
+	expectedMsg := "`ownership` block is missing `type` property"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestInvalidOwnershipTypeValue tests that an error will occur when
+// `ownership.type` is set to an unacceptable value
+func TestInvalidOwnershipTypeValue(t *testing.T) {
+	d := map[string]interface{}{
+		"type": "some_value",
+	}
+	err := ValidateOwnershipBlock(d)
+	assert.NotNil(t, err)
+	expectedMsg := "`ownership.type` property has unexpected value"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestMissingSoleProperty tests that an error will occur when `ownership.type` is 
+// `sole` and `ownership.sole` property is missing
+func TestMissingSoleProperty(t *testing.T) {
+	d := map[string]interface{}{
+		"type": "sole",
+	}
+	err := ValidateOwnershipBlock(d)
+	assert.NotNil(t, err)
+	expectedMsg := "`ownership` block is missing `sole` property"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestInvalidSolePropertyType tests that an error will occur when `ownership.sole` value
+// type is not a map of interface{} value
+func TestInvalidSolePropertyType(t *testing.T) {
+	d := map[string]interface{}{
+		"type": "sole",
+		"sole": "abcde",
+	}
+	err := ValidateOwnershipBlock(d)
+	assert.NotNil(t, err)
+	expectedMsg := "`ownership.sole` value type is invalid. Expects a JSON object"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestSolePropertyMissingAddressIDProperty tests that an error will occur when
+// `ownership.sole` is missing `address_id` property
+func TestSolePropertyMissingAddressIDProperty(t *testing.T) {
+	d := map[string]interface{}{
+		"type": "sole",
+		"sole": map[string]interface{}{},
+	}
+	err := ValidateOwnershipBlock(d)
+	assert.NotNil(t, err)
+	expectedMsg := "`ownership.sole` property is missing `address_id` property"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestInvalidSolePropertyAddressID tests that an error will occur when `ownership.sole.address_id` 
+// value type is not string
+func TestInvalidSolePropertyAddressID(t *testing.T) {
+	d := map[string]interface{}{
+		"type": "sole",
+		"sole": map[string]interface{}{
+			"address_id": 123,	
+		},
+	}
+	err := ValidateOwnershipBlock(d)
+	assert.NotNil(t, err)
+	expectedMsg := "`ownership.sole.address_id` value type is invalid. Expects string value"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestInvalidSoleStatusPropertyValueType tests that an error will occur when 
+// `ownership.status` is set with an invalid value type
+func TestInvalidSoleStatusPropertyValueType(t *testing.T) {
+	d := map[string]interface{}{
+		"type": "sole",
+		"sole": map[string]interface{}{
+			"address_id": "abcde",	
+		},
+		"status": 123,
+	}
+	err := ValidateOwnershipBlock(d)
+	assert.NotNil(t, err)
+	expectedMsg := "`ownership.status` value type is invalid. Expects string value"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestUnexpectedOwnershipStatusValue tests that an error will occur when 
+// `ownership.status` is set with an unexpected value
+func TestUnexpectedOwnershipStatusValue(t *testing.T) {
+	d := map[string]interface{}{
+		"type": "sole",
+		"sole": map[string]interface{}{
+			"address_id": "abcde",	
+		},
+		"status": "unexpected_value",
+	}
+	err := ValidateOwnershipBlock(d)
+	assert.NotNil(t, err)
+	expectedMsg := "`ownership.status` property has unexpected value"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
@@ -254,7 +398,12 @@ func TestInvalidAttributesBlockValueType(t *testing.T) {
 			"shell_type": "cur", 
 			"created_at": 1453975575 
 		},
-		"ownership": { "stuff": "stuff" },
+		"ownership": { 
+			"type": "sole", 
+		"sole": {
+				"address_id": "1234"
+			} 
+		},
 		"attributes": "abcde"
 	}`
 	err := Validate(str)
@@ -276,7 +425,12 @@ func TestSignaturesBlockMustHaveAttributesProperty(t *testing.T) {
 			"shell_type": "cur", 
 			"created_at": 1453975575 
 		},
-		"ownership": { "stuff": "stuff" },
+		"ownership": { 
+			"type": "sole", 
+			"sole": {
+				"address_id": "1234"
+			}
+		},
 		"attributes": { "stuff": "stuff" }
 	}`
 	err := Validate(str)

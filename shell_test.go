@@ -11,7 +11,7 @@ var TEST_ISSUER_PRIVATE_KEYS = []string{
 }
 
 var TEST_SHELL_DATA = []string {
-	`{"signatures":{"meta":""},"meta":{"created_at":1453975575,"genesis":true,"shell_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","shell_type":"currency"},"ownership":null,"embeds":[],"attributes":null}`,
+	`{"signatures":{"meta":""},"meta":{"created_at":1453975575, "shell_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","shell_type":"currency"},"ownership":null,"embeds":[],"attributes":null}`,
 }
 
 // TestCreateAShell create a valid, error free shell

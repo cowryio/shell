@@ -180,6 +180,7 @@ func(self *Shell) AddMeta(meta map[string]interface{}, issuerPrivateKey string) 
     return nil
 }
 
+
 // return shell as raw JSON string
 func(self *Shell) JSON() string {
 	bs, _ := json.Marshal(&self)

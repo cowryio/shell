@@ -13,6 +13,14 @@ import "time"
 // * created_at must be a valid unix date in the past but not beyond a start/launch time
 func ValidateMetaBlock(meta map[string]interface{}) error {
 
+	// must reject unexpected properties
+	accetableProps := []string{ "shell_id", "shell_type", "created_at" } 
+	for prop, _ := range meta {
+		if !InStringSlice(accetableProps, prop) {
+			return errors.New(fmt.Sprintf("`%s` property is unexpected in `meta` block", prop))
+		}
+	}
+
 	// must have expected properties
 	props := []string{"shell_id", "shell_type", "created_at"}
 	for _, prop := range props {
@@ -53,16 +61,23 @@ func ValidateMetaBlock(meta map[string]interface{}) error {
 			return errors.New("`created_at` value cannot be a unix time in the future")
 		}
 	}
-	
 
 	return nil
 }
 
 // Validate `signature` block'
 // * `meta` signature must be present and must be a string type
-// TODO: `attributes` property must be string type if set
-// TODO: `ownership` property must be string type if set
+// * `attributes` property must be string type if set
+// * `ownership` property must be string type if set
 func ValidateSignaturesBlock(signatures map[string]interface{}) error {
+
+	// must reject unexpected properties
+	accetableProps := []string{ "meta", "ownership", "attributes" } 
+	for prop, _ := range signatures {
+		if !InStringSlice(accetableProps, prop) {
+			return errors.New(fmt.Sprintf("`%s` property is unexpected in `signatures` block", prop))
+		}
+	}
 
 	// must have `meta` property
 	if signatures["meta"] == nil {
@@ -85,6 +100,66 @@ func ValidateSignaturesBlock(signatures map[string]interface{}) error {
 	if signatures["attributes"] != nil {
 		if !IsStringValue(signatures["attributes"]) {
 			return errors.New("`signatures.attributes` value type is invalid. Expects string value")
+		}
+	}
+	
+	return nil
+}
+
+// Validate ownership block
+// * `type` property must exist and must contain acceptable value
+func ValidateOwnershipBlock(ownership map[string]interface{}) error {
+
+	// must reject unexpected properties
+	accetableProps := []string{ "type", "sole", "status" } 
+	for prop, _ := range ownership {
+		if !InStringSlice(accetableProps, prop) {
+			return errors.New(fmt.Sprintf("`%s` property is unexpected in `ownership` block", prop))
+		}
+	}
+
+	// `type` property must be set
+	if ownership["type"] != nil {
+		acceptableValues := []string{"sole"}
+		if !InStringSlice(acceptableValues, ownership["type"].(string)) {
+			return errors.New("`ownership.type` property has unexpected value")
+		}
+	} else {
+		return errors.New("`ownership` block is missing `type` property")
+	}	
+
+	// if ownership.type is `sole`, `sole` property is required
+	if ownership["type"].(string) == "sole" && ownership["sole"] == nil {
+		return errors.New("`ownership` block is missing `sole` property")
+	} else {
+
+		// `sole` property must be a map
+		if !IsMapOfAny(ownership["sole"]) {
+			return errors.New("`ownership.sole` value type is invalid. Expects a JSON object")
+		}
+
+		// `sole` property must have `address_id` property
+		soleProperty := ownership["sole"].(map[string]interface{})
+		if soleProperty["address_id"] == nil {
+			return errors.New("`ownership.sole` property is missing `address_id` property")
+		}
+
+		// `sole.address_id` value type must be string
+		if !IsStringValue(soleProperty["address_id"]) {
+			return errors.New("`ownership.sole.address_id` value type is invalid. Expects string value")
+		}
+	}
+
+	// `status` property is optional, but if set, it's type must be string 
+	// and must have acceptable values
+	if ownership["status"] != nil {
+		if !IsStringValue(ownership["status"]) {
+			return errors.New("`ownership.status` value type is invalid. Expects string value")
+		} else {
+			acceptableValues := []string{ "transferred" }
+			if !InStringSlice(acceptableValues, ownership["status"].(string)) {
+				return errors.New("`ownership.status` property has unexpected value")
+			}
 		}
 	}
 	
@@ -142,14 +217,17 @@ func Validate(shellData interface{}) error {
 
     // if `ownership` block exists, it must be a map
     if data["ownership"] != nil {
-    	if !IsMapOfAny(data["ownership"]) {
-    		return errors.New("`ownership` block value type is invalid. Expects a JSON object")
-    	} else {
-    		// `signatures` block must have `ownership` property
+    	if IsMapOfAny(data["ownership"]) {
     		var signatures = data["signatures"].(map[string]interface{})
     		if signatures["ownership"] == nil {
     			return errors.New("missing `ownership` property in `signatures` block")
+    		} else {
+    			if err := ValidateOwnershipBlock(data["ownership"].(map[string]interface{})); err != nil {
+    				return err
+    			}
     		}
+    	} else {
+    		return errors.New("`ownership` block value type is invalid. Expects a JSON object")
     	}
     }
 
@@ -165,6 +243,8 @@ func Validate(shellData interface{}) error {
     		}
     	}
     }
+
+    // TODO: validate embeds?
 
     return nil
 }
