@@ -144,25 +144,38 @@ func LoadJSON(jsonStr string) (*Shell, error) {
 // of the block value and signing with the issuer's private key. The computed signature
 // is store the `signatures` block
 func(self *Shell) Sign(blockName string, privateKey string) (string, error) {
+	
+	var canonicalMap string
+
 	switch blockName {
 	case "meta":
-		canonicalMap := GetCanonicalMapString(self.Meta)
-		signer, err := ParsePrivateKey([]byte(privateKey))
-		if err != nil {
-			return "", errors.New(fmt.Sprintf("Private Key Error: %v", err))
-		}
-		signature, err := signer.Sign([]byte(canonicalMap))
-		if err != nil {
-			return "", errors.New(fmt.Sprintf("Signature Error: %v", err))
-		}
-		self.Signatures["meta"] = signature
-		return signature, nil
+		canonicalMap = GetCanonicalMapString(self.Meta)
+		break
+	case "ownership":
+		canonicalMap = GetCanonicalMapString(self.Ownership)
+		break
+	case "attributes":
+		canonicalMap = GetCanonicalMapString(self.Attributes)
+		break
 	default:
 		return "", errors.New("block unknown")
 	}
+
+	signer, err := ParsePrivateKey([]byte(privateKey))
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("Private Key Error: %v", err))
+	}
+
+	signature, err := signer.Sign([]byte(canonicalMap))
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("Signature Error: %v", err))
+	}
+
+	self.Signatures[blockName] = signature
+	return signature, nil
 }
 
-// Assign a valid meta value to the meta block
+// Assign and sign a valid meta value to the meta block
 func(self *Shell) AddMeta(meta map[string]interface{}, issuerPrivateKey string) error {
 
 	// validate meta
@@ -170,16 +183,49 @@ func(self *Shell) AddMeta(meta map[string]interface{}, issuerPrivateKey string) 
     	return err
     }
 
+    self.Meta = meta
+
     // sign meta block
     _, err := self.Sign("meta", issuerPrivateKey)
 	if err != nil {
 		return err
 	}
 
-    self.Meta = meta
     return nil
 }
 
+// Assign and sign a valid ownership data to the ownership block
+func (self *Shell) AddOwnership(ownership map[string]interface{}, issuerPrivateKey string) error {
+
+	// validate 
+	if err := ValidateOwnershipBlock(ownership); err != nil {
+    	return err
+    }
+
+	self.Ownership = ownership
+
+	// sign block
+    _, err := self.Sign("ownership", issuerPrivateKey)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Assign a attribute data to the attributes bloc
+func (self *Shell) AddAttributes(attributes map[string]interface{}, issuerPrivateKey string) error {
+	
+	self.Attributes = attributes
+
+	// sign block
+    _, err := self.Sign("attributes", issuerPrivateKey)
+	if err != nil {
+		return err
+	}
+	
+	return nil
+}
 
 // return shell as raw JSON string
 func(self *Shell) JSON() string {

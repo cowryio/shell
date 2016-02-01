@@ -108,7 +108,7 @@ func TestCannotSignUnknownBlock(t *testing.T) {
 	assert.Equal(t, err.Error(), expectedMsg)
 }
 
-// TestAddMeta tests that a meta block can be assigned and signed successful using the TestAddMeta method
+// TestAddMeta tests that a `meta` block can be assigned and signed successful
 func TestAddMeta(t *testing.T) {
 	shellID := NewID()
 	var meta = map[string]interface{}{
@@ -121,6 +121,34 @@ func TestAddMeta(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, sh.Meta["shell_id"], meta["shell_id"])
 	assert.NotNil(t, sh.Signatures["meta"])
+}
+
+// TestAddOwnership tests that the `ownership` block is assigned and signed successfully
+func TestAddOwnership(t *testing.T) {
+	var ownership = map[string]interface{}{
+		"type": "sole",
+   		"sole": map[string]interface{}{
+   					"address_id": "abcde",
+   		},
+   		"status": "transferred",
+	}
+	sh := Empty()
+	err := sh.AddOwnership(ownership, TEST_ISSUER_PRIVATE_KEYS[0])
+	assert.Nil(t, err)
+	assert.Equal(t, sh.Ownership["type"], ownership["type"])
+	assert.NotNil(t, sh.Signatures["ownership"])
+}
+
+// TestAddOwnership tests that the `attributes` block is assigned and signed successfully
+func TestAddAttributes(t *testing.T) {
+	var attrs = map[string]interface{}{
+		"some_data": "some_value",
+	}
+	sh := Empty()
+	err := sh.AddAttributes(attrs, TEST_ISSUER_PRIVATE_KEYS[0])
+	assert.Nil(t, err)
+	assert.Equal(t, sh.Attributes["some_data"], attrs["some_data"])
+	assert.NotNil(t, sh.Signatures["attributes"])
 }
 
 
