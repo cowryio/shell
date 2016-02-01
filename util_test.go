@@ -91,3 +91,15 @@ func TestIsMapOfAny(t *testing.T) {
 	assert.Equal(t, IsMapOfAny(m), true)
 	assert.Equal(t, IsMapOfAny(10), false)
 }
+
+// TestMapIsEmpty tests that a map is empty
+func TestMapIsEmpty(t *testing.T) {
+	m := map[string]interface{}{}
+	assert.Equal(t, true, IsMapEmpty(m))
+}
+
+// TestMapIsNotEmpty tests that a map is not empty
+func TestMapIsNotEmpty(t *testing.T) {
+	m := map[string]interface{}{ "key": "val" }
+	assert.Equal(t, false, IsMapEmpty(m))
+}
