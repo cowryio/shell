@@ -179,3 +179,8 @@ func Env(key, defStr string) string {
 	}
 	return val
 }
+
+// check if a map is empty
+func IsMapEmpty(m map[string]interface{}) bool {
+	return len(GetMapKeys(m)) == 0
+}
