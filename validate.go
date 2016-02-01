@@ -192,7 +192,7 @@ func Validate(shellData interface{}) error {
     } else {
     	switch meta := data["meta"].(type) {
     	case map[string]interface{}:
-    		if err := ValidateMetaBlock(meta); err != nil {
+    		if  err := ValidateMetaBlock(meta); err != nil {
     			return err
     		}
     		break
@@ -217,17 +217,19 @@ func Validate(shellData interface{}) error {
 
     // if `ownership` block exists, it must be a map
     if data["ownership"] != nil {
-    	if IsMapOfAny(data["ownership"]) {
-    		var signatures = data["signatures"].(map[string]interface{})
-    		if signatures["ownership"] == nil {
-    			return errors.New("missing `ownership` property in `signatures` block")
-    		} else {
-    			if err := ValidateOwnershipBlock(data["ownership"].(map[string]interface{})); err != nil {
-    				return err
-    			}
-    		}
-    	} else {
+    	if !IsMapOfAny(data["ownership"]) {
     		return errors.New("`ownership` block value type is invalid. Expects a JSON object")
+    	} else {
+    		if !IsMapEmpty(data["ownership"].(map[string]interface{})) {
+	    		var signatures = data["signatures"].(map[string]interface{})
+	    		if signatures["ownership"] == nil {
+	    			return errors.New("missing `ownership` property in `signatures` block")
+	    		} else {
+	    			if err := ValidateOwnershipBlock(data["ownership"].(map[string]interface{})); err != nil {
+	    				return err
+	    			}
+	    		}
+	    	}
     	}
     }
 
@@ -236,11 +238,13 @@ func Validate(shellData interface{}) error {
     	if !IsMapOfAny(data["attributes"]) {
     		return errors.New("`attributes` block value type is invalid. Expects a JSON object")
     	} else {
-    		// `attributes` block must have `ownership` property
-    		var signatures = data["signatures"].(map[string]interface{})
-    		if signatures["attributes"] == nil {
-    			return errors.New("missing `attributes` property in `signatures` block")
-    		}
+    		if !IsMapEmpty(data["attributes"].(map[string]interface{})) {
+	    		// `signatures` block must have `attributes` property
+	    		var signatures = data["signatures"].(map[string]interface{})
+	    		if signatures["attributes"] == nil {
+	    			return errors.New("missing `attributes` property in `signatures` block")
+	    		}
+	    	}
     	}
     }
 
