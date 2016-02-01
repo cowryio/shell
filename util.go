@@ -70,8 +70,19 @@ func GetCanonicalMapString(m map[string]interface{}) string {
 		val := m[key]
 		switch d := val.(type) {
 		case int:
-		case int64:
 			cannonicalStr = append(cannonicalStr, key+":"+strconv.Itoa(d))
+			break
+		case int32:
+			cannonicalStr = append(cannonicalStr, key+":"+strconv.Itoa(int(d)))
+			break
+		case int64:
+			cannonicalStr = append(cannonicalStr, key+":"+strconv.Itoa(int(d)))
+			break
+		case float32:
+			cannonicalStr = append(cannonicalStr, key+":" + fmt.Sprintf("%.3f", d))
+			break
+		case float64:
+			cannonicalStr = append(cannonicalStr, key+":" + fmt.Sprintf("%.3f", d))
 			break
 		case string:
 			cannonicalStr = append(cannonicalStr, key+":"+d)
