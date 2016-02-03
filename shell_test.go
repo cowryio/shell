@@ -5,9 +5,10 @@ import "time"
 import "github.com/cowryio/shell/Godeps/_workspace/src/github.com/stretchr/testify/assert"
 
 
-var TEST_ISSUER_PRIVATE_KEYS = []string{
+var sampleKeys = []string{
 	"-----BEGIN RSA PRIVATE KEY-----\nMIICWwIBAAKBgQCroZieOAo9stcf6R6eWfo51VCvK8cLdNS577m/HIFOmEd1CDi/\nu7agGzpehNAhHpr5NVjQZ4Te+KMRn9SnpUK2hc8dUU25PQolsOEwePVQ18hHNK4Y\n2JvOY/f8KCO2hhrS6uuP6eedpnSdulS1OXHTL6ZxQmBd9F33gLT6BERHQwIDAQAB\nAoGAEZ/0ljrXAmL9KG++DzDaO1omgPaT6B9FQRrXDkMVHEcS/3eqrDXQmTxykAY/\ngUctTu4lgrE+uc76n/Kz2ctkwEKIKet56ylqp+wlEUt1G+udoi07tgd7XyxzoUJm\nZwSm89gKh+mEPxni0FrBNg6dR0n2gvKRecnXqyoGVOHZITECQQDXgRJyrzgc/JhB\nSOBznEjtXAZXRRu3o9UznztjU9Xz7NWXTVuHu8WqYmGWCOqnysMhXJ3xBddJyDTF\njuOJ0123AkEAy+H+3POcT2FDOuluqPmAZQAUU6Nxtbj02/JJtOy7jq5jnN27HVC3\nuQzmfsS5J2XeQQodOUwOy2Ub57/OMrMi1QJAGZsZgQz2wuL0iFVLbhE0zRcxHa91\ncqWB0Kdr3Ap7EoeifV7QsFkMTIlyBOy8TQGXm+AwWBIUmYyzUIIA4UB/EwJAO+Bo\nSB2nZ0yqQO/zVt7HjWIDljinGXZzOvEiImdwAcxHZvdbj5V4D3mxa8N8mQx6xGEj\nCgPDSIquMlaLSSqA7QJAAbQPa0frCkm1rkWWZ7QwGm7ptzOACwFEGefm/1mhmw3a\nvoWRTHhrDuEbeVH3iF8MWhLJLPFtuSShiQMsrVbXPA==\n-----END RSA PRIVATE KEY-----",
 	"-----BEGIN KEY-----\nMIICWwIBAAKBgQCroZieOAo9stcf6R6eWfo51VCvK8cLdNS577m/HIFOmEd1CDi/\nu7agGzpehNAhHpr5NVjQZ4Te+KMRn9SnpUK2hc8dUU25PQolsOEwePVQ18hHNK4Y\n2JvOY/f8KCO2hhrS6uuP6eedpnSdulS1OXHTL6ZxQmBd9F33gLT6BERHQwIDAQAB\nAoGAEZ/0ljrXAmL9KG++DzDaO1omgPaT6B9FQRrXDkMVHEcS/3eqrDXQmTxykAY/\ngUctTu4lgrE+uc76n/Kz2ctkwEKIKet56ylqp+wlEUt1G+udoi07tgd7XyxzoUJm\nZwSm89gKh+mEPxni0FrBNg6dR0n2gvKRecnXqyoGVOHZITECQQDXgRJyrzgc/JhB\nSOBznEjtXAZXRRu3o9UznztjU9Xz7NWXTVuHu8WqYmGWCOqnysMhXJ3xBddJyDTF\njuOJ0123AkEAy+H+3POcT2FDOuluqPmAZQAUU6Nxtbj02/JJtOy7jq5jnN27HVC3\nuQzmfsS5J2XeQQodOUwOy2Ub57/OMrMi1QJAGZsZgQz2wuL0iFVLbhE0zRcxHa91\ncqWB0Kdr3Ap7EoeifV7QsFkMTIlyBOy8TQGXm+AwWBIUmYyzUIIA4UB/EwJAO+Bo\nSB2nZ0yqQO/zVt7HjWIDljinGXZzOvEiImdwAcxHZvdbj5V4D3mxa8N8mQx6xGEj\nCgPDSIquMlaLSSqA7QJAAbQPa0frCkm1rkWWZ7QwGm7ptzOACwFEGefm/1mhmw3a\nvoWRTHhrDuEbeVH3iF8MWhLJLPFtuSShiQMsrVbXPA==\n-----END RSA PRIVATE KEY-----",
+	"-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCroZieOAo9stcf6R6eWfo51VCv\nK8cLdNS577m/HIFOmEd1CDi/u7agGzpehNAhHpr5NVjQZ4Te+KMRn9SnpUK2hc8d\nUU25PQolsOEwePVQ18hHNK4Y2JvOY/f8KCO2hhrS6uuP6eedpnSdulS1OXHTL6Zx\nQmBd9F33gLT6BERHQwIDAQAB\n-----END PUBLIC KEY-----",
 }
 
 var TEST_SHELL_DATA = []string {
@@ -22,7 +23,7 @@ func TestCreateAShell(t *testing.T) {
 		"shell_type": "currency",
 		"created_at": time.Now().Unix(),
 	}
-	sh, err := Create(meta, TEST_ISSUER_PRIVATE_KEYS[0])
+	sh, err := Create(meta, sampleKeys[0])
 	assert.Nil(t, err)
 	assert.Equal(t, sh.Meta["shell_id"], shellID)
 	assert.NotEmpty(t, sh.Signatures["meta"])
@@ -30,14 +31,14 @@ func TestCreateAShell(t *testing.T) {
 
 // TestMustProvideMetaWithContent test that a map describing the `meta` block is required
 func TestMustProvideMetaWithContent(t *testing.T) {
-	_, err := Create(make(map[string]interface{}), TEST_ISSUER_PRIVATE_KEYS[0])
+	_, err := Create(make(map[string]interface{}), sampleKeys[0])
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "`meta` block is missing `shell_id` property")
 }
 
 // TestInvalidPrivateKey tests that an invalid private key returns an error
 func TestInvalidPrivateKey(t *testing.T) {
-	var issuerPrivateKey = TEST_ISSUER_PRIVATE_KEYS[1]
+	var issuerPrivateKey = sampleKeys[1]
 	shellID := NewID()
 	var meta = map[string]interface{}{
 		"shell_id": shellID,
@@ -87,11 +88,11 @@ func TestCorrectlySignMeta(t *testing.T) {
 	shell, err := LoadJSON(txt)
 	assert.Nil(t, err);
 	expectedCanonicalMapString := GetCanonicalMapString(shell.Meta)
-	signer, err := ParsePrivateKey([]byte(TEST_ISSUER_PRIVATE_KEYS[0]))
+	signer, err := ParsePrivateKey([]byte(sampleKeys[0]))
 	assert.Nil(t, err)
 	expectedSignature, err := signer.Sign([]byte(expectedCanonicalMapString))
 	assert.Nil(t, err)
-	signature, err := shell.Sign("meta", TEST_ISSUER_PRIVATE_KEYS[0])
+	signature, err := shell.Sign("meta", sampleKeys[0])
 	assert.Nil(t, err)
 	assert.Equal(t, expectedSignature, signature)
 	assert.Equal(t, expectedSignature, shell.Signatures["meta"])
@@ -102,7 +103,7 @@ func TestCannotSignUnknownBlock(t *testing.T) {
 	txt := TEST_SHELL_DATA[0]
 	shell, err := LoadJSON(txt)
 	assert.Nil(t, err)
-	_, err = shell.Sign("unknown_block", TEST_ISSUER_PRIVATE_KEYS[0])
+	_, err = shell.Sign("unknown_block", sampleKeys[0])
 	assert.NotNil(t, err)
 	expectedMsg := "block unknown"
 	assert.Equal(t, err.Error(), expectedMsg)
@@ -117,7 +118,7 @@ func TestAddMeta(t *testing.T) {
 		"created_at": time.Now().Unix(),
 	}
 	sh := Empty()
-	err := sh.AddMeta(meta, TEST_ISSUER_PRIVATE_KEYS[0])
+	err := sh.AddMeta(meta, sampleKeys[0])
 	assert.Nil(t, err)
 	assert.Equal(t, sh.Meta["shell_id"], meta["shell_id"])
 	assert.NotNil(t, sh.Signatures["meta"])
@@ -133,7 +134,7 @@ func TestAddOwnership(t *testing.T) {
    		"status": "transferred",
 	}
 	sh := Empty()
-	err := sh.AddOwnership(ownership, TEST_ISSUER_PRIVATE_KEYS[0])
+	err := sh.AddOwnership(ownership, sampleKeys[0])
 	assert.Nil(t, err)
 	assert.Equal(t, sh.Ownership["type"], ownership["type"])
 	assert.NotNil(t, sh.Signatures["ownership"])
@@ -145,10 +146,85 @@ func TestAddAttributes(t *testing.T) {
 		"some_data": "some_value",
 	}
 	sh := Empty()
-	err := sh.AddAttributes(attrs, TEST_ISSUER_PRIVATE_KEYS[0])
+	err := sh.AddAttributes(attrs, sampleKeys[0])
 	assert.Nil(t, err)
 	assert.Equal(t, sh.Attributes["some_data"], attrs["some_data"])
 	assert.NotNil(t, sh.Signatures["attributes"])
+}
+
+// TestHashSignature tests that an attribute does not or has a signature
+func TestHashSignature(t *testing.T) {
+	var attrs = map[string]interface{}{
+		"some_data": "some_value",
+	}
+	sh := Empty()
+	assert.Equal(t, sh.HasSignature("attributes"), false)
+	assert.Equal(t, sh.HasSignature("ownership"), false)
+	err := sh.AddAttributes(attrs, sampleKeys[0])
+	assert.Nil(t, err)
+	assert.Equal(t, sh.HasSignature("attributes"), true)
+	assert.Equal(t, sh.HasSignature("ownership"), false)
+}
+
+// TestCallVerifyWithUnknownBlockName tests that an error will occur when verifying an unknown block
+func TestCallVerifyWithUnknownBlockName(t *testing.T) {
+	var attrs = map[string]interface{}{
+		"some_data": "some_value",
+	}
+	sh := Empty()
+	err := sh.AddAttributes(attrs, sampleKeys[0])
+	assert.Nil(t, err)
+	err = sh.Verify("some_block", sampleKeys[2])
+	assert.NotNil(t, err)
+	expectedMsg := "block name some_block is unknown"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestCallVerifyWithInvalidPublicKey tests that an error will occur when verifying using an invalid public key
+func TestCallVerifyWithInvalidPublicKey(t *testing.T) {
+	var attrs = map[string]interface{}{
+		"some_data": "some_value",
+	}
+	sh := Empty()
+	err := sh.AddAttributes(attrs, sampleKeys[0])
+	assert.Nil(t, err)
+	err = sh.Verify("attributes", sampleKeys[1])
+	assert.NotNil(t, err)
+	expectedMsg := `Public Key Error: unsupported key type "KEY"`
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestCallVerifyOnBlockWithNoSignature tests that an error will occur when verifying a block with no signature
+// in the signatures block
+func TestCallVerifyOnBlockWithNoSignature(t *testing.T) {
+	sh := Empty()
+	err := sh.Verify("attributes", sampleKeys[2])
+	assert.NotNil(t, err)
+	expectedMsg := "block `attributes` has no signature"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+
+// TestCallVerifyWhenBlockSignatureHexEncodeIsInvalid tests that an error will occur when verifying a block that has
+// a signature that cannot be decoded from it hex encoded variation
+func TestCallVerifyWhenBlockSignatureHexEncodeIsInvalid(t *testing.T) {
+	sh := Empty()
+	sh.Signatures["attributes"] = "abcdefaa9*"
+	err := sh.Verify("attributes", sampleKeys[2])
+	assert.NotNil(t, err)
+	expectedMsg := "invalid signature: unable to decode from hex to string"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestCallVerifyWhenBlockSignatureInvalid tests that an error will occur when verifying a block 
+// that has an invalid signature
+func TestCallVerifyWhenBlockSignatureInvalid(t *testing.T) {
+	sh := Empty()
+	sh.Signatures["attributes"] = "abcdef"
+	err := sh.Verify("attributes", sampleKeys[2])
+	assert.NotNil(t, err)
+	expectedMsg := "crypto/rsa: verification error"
+	assert.Equal(t, expectedMsg, err.Error())
 }
 
 

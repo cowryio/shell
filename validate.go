@@ -248,7 +248,34 @@ func Validate(shellData interface{}) error {
     	}
     }
 
-    // TODO: validate embeds?
+    // if `embeds` block exists, it must be a slice of maps
+    if data["embeds"] != nil {
+
+    	if !IsSlice(data["embeds"]) || !ContainsOnlyMapType(data["embeds"].([]interface{}))  {
+    		return errors.New("`embeds` block value type is invalid. Expects a list of only JSON objects")
+    	}
+
+		// validate each shells in the embeds block. Prevent validaton of the individual shells' embeds
+		// by empting their `embeds` block before calling Validate() on them. Reassign their `embeds` block
+		// back after validation.
+		for i, embed := range data["embeds"].([]interface{}) {
+			
+			shell := embed.(map[string]interface{})
+			
+			// remove embeds property in shellMap as we aren't interested in validating deeper levels
+			embedsClone := CloneSliceOfInterface(shell["embeds"].([]interface{}))
+			
+			// empty shell's embeds block
+			shell["embeds"] = []interface{}{}
+
+			if err := Validate(shell); err != nil {
+				return errors.New(fmt.Sprintf("unable to validate embed in index %d. Reason: %s", i, err.Error()))
+			}
+
+			// reassign shell's embeds
+			shell["embeds"] = embedsClone
+		}
+    }
 
     return nil
 }

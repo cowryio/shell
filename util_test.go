@@ -103,3 +103,50 @@ func TestMapIsNotEmpty(t *testing.T) {
 	m := map[string]interface{}{ "key": "val" }
 	assert.Equal(t, false, IsMapEmpty(m))
 }
+
+// TestIsSlice tests that a variable's value type is slice of interface{}
+func TestIsSlice(t *testing.T) {
+	s := []interface{}{}
+	assert.Equal(t, true, IsSlice(s))
+}
+
+// TestContainsOnlyMapType tests that a variable's value type is a slice containing only map type
+func TestContainsOnlyMapType(t *testing.T) {
+	s := []interface{}{
+		map[string]interface{}{ "a": "b" },
+	}
+	assert.Equal(t, true, ContainsOnlyMapType(s))
+}
+
+// TestCloneMapInterface tests that a map is successfully cloned/copied
+func TestCloneMapInterface(t *testing.T) {
+	s := map[string]interface{}{
+		"a": "a",
+		"b": "b",
+	}
+	sCopy := CloneMapInterface(s)
+	sCopy["a"] = "abc"
+	assert.ObjectsAreEqual(s, sCopy)
+	assert.NotEqual(t, s["a"], sCopy["a"])
+}
+
+// TestCloneSliceMapInterface tests that a slice of maps is successfully cloned
+func TestCloneSliceMapInterface(t *testing.T) {
+	sm := []map[string]interface{}{
+		map[string]interface{}{"a": "a","b": "b"},
+		map[string]interface{}{"a": "a","b": "b"},
+	}
+	smCopy := CloneSliceMapInterface(sm)
+	smCopy[0]["a"] = "abcde"
+	assert.ObjectsAreEqual(sm, smCopy)
+	assert.NotEqual(t, sm[0]["a"], smCopy[0]["a"])
+}
+
+// TestCloneSliceOfInterface tests that a slice of interface{} type is successfully cloned
+func TestCloneSliceOfInterface(t *testing.T) {
+	s := []interface{}{"a", "b", 2}
+	sCopy := CloneSliceOfInterface(s)
+	assert.ObjectsAreEqual(s, sCopy)
+	s[0] = "abcde"
+	assert.NotEqual(t, s[0], sCopy[0])
+}

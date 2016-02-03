@@ -13,7 +13,7 @@ type Shell struct {
 	Signatures map[string]interface{} 		`json:"signatures"`
 	Meta map[string]interface{}				`json:"meta"`
 	Ownership map[string]interface{} 		`json:"ownership"`
-	Embeds []map[string]interface{} 		`json:"embeds"`
+	Embeds []interface{}			 		`json:"embeds"`
 	Attributes map[string]interface{}		`json:"attributes"`
 }
 
@@ -22,7 +22,7 @@ func initialize(shell *Shell) *Shell {
 	shell.Signatures = make(map[string]interface{})
 	shell.Meta = make(map[string]interface{})
 	shell.Ownership = make(map[string]interface{})
-	shell.Embeds = []map[string]interface{}{}
+	shell.Embeds = []interface{}{}
 	shell.Attributes = make(map[string]interface{})
 	return shell
 }
@@ -60,46 +60,27 @@ func loadMap(data map[string]interface{}) (*Shell, error) {
 
 	// add signatures
     if signatures := data["signatures"]; signatures != nil {
-    	switch val := signatures.(type) {
-    	case map[string]interface{}:
-    		shell.Signatures = val
-    		break;
-    	default:
-    		return &Shell{}, errors.New("`signatures` block has invalid value type. Expects JSON object")
-    	}
+    	shell.Signatures = data["signatures"].(map[string]interface{})
     }
 
     // add meta
     if meta := data["meta"]; meta != nil {
-    	switch val := meta.(type) {
-    	case map[string]interface{}:
-    		shell.Meta = val
-    		break;
-    	default:
-    		return &Shell{}, errors.New("`meta` block has invalid value type. Expects JSON object")
-    	}
+    	shell.Meta = data["meta"].(map[string]interface{})
     }
 
     // add ownership
     if ownership := data["ownership"]; ownership != nil {
-    	switch val := ownership.(type) {
-    	case map[string]interface{}:
-    		shell.Ownership = val
-    		break;
-    	default:
-    		return &Shell{}, errors.New("`ownership` block has invalid value type. Expects JSON object")
-    	}
+    	shell.Ownership = data["ownership"].(map[string]interface{})
     }
 
-    // // add attributes
+    // add attributes
     if attributes := data["attributes"]; attributes != nil {
-    	switch val := attributes.(type) {
-    	case map[string]interface{}:
-    		shell.Attributes = val
-    		break;
-    	default:
-    		return &Shell{}, errors.New("`attributes` block has invalid value type. Expects JSON object")
-    	}
+    	shell.Attributes = data["attributes"].(map[string]interface{})
+    }
+
+    // add embeds
+    if embeds := data["embeds"]; embeds != nil {
+    	shell.Embeds = embeds.([]interface{})
     }
 
     return shell, nil
@@ -226,6 +207,48 @@ func (self *Shell) AddAttributes(attributes map[string]interface{}, issuerPrivat
 	
 	return nil
 }
+
+// checks if a block has a signature
+func(self *Shell) HasSignature(blockName string) bool {
+	switch blockName {
+	case "meta", "ownership", "attributes":
+		return self.Signatures[blockName] != nil && strings.TrimSpace(self.Signatures[blockName].(string)) != ""
+		break
+	default:
+		return false
+	}
+	return false
+}
+
+// Verify one or all block. If blockName is set to an empty string,
+// all blocks are verified.
+func(self *Shell) Verify(blockName, issuerPublicKey string) error {
+
+	var canonicalMap string
+
+	switch blockName {
+	case "meta":
+		canonicalMap = GetCanonicalMapString(self.Meta)
+	case "ownership":
+		canonicalMap = GetCanonicalMapString(self.Ownership)
+	case "attributes":
+		canonicalMap = GetCanonicalMapString(self.Attributes)
+	default:
+		return errors.New("block name "+blockName+" is unknown")
+	}
+
+	signer, err := ParsePublicKey([]byte(issuerPublicKey))
+	if err != nil {
+		return errors.New(fmt.Sprintf("Public Key Error: %v", err))
+	}
+
+	// block has no signature
+	if !self.HasSignature(blockName) {
+		return errors.New("block `"+blockName+"` has no signature")
+	}
+
+	return signer.Verify([]byte(canonicalMap), self.Signatures[blockName].(string))
+}  
 
 // return shell as raw JSON string
 func(self *Shell) JSON() string {

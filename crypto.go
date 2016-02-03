@@ -90,7 +90,7 @@ func (r *Signer) Sign(data []byte) (string, error) {
 func (r *Signer) Verify(message []byte, hexEncodedSig string) error {
 	sig, err := HexDecode(hexEncodedSig)
 	if err != nil {
-		return errors.New("unable to decode signature hex to string")
+		return errors.New("invalid signature: unable to decode from hex to string")
 	} 
 	h := sha256.New()
 	h.Write(message)

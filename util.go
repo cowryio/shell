@@ -123,8 +123,36 @@ func IsMapOfAny(any interface{}) bool {
 		break
 	default:
 		return false
+		break
 	}
 	return false
+}
+
+// checks that a variable value type is a slice
+func IsSlice(any interface{}) bool {
+	switch any.(type) {
+	case []interface{}:
+		return true
+		break
+	default:
+		return false
+		break
+	}
+	return false
+}
+
+// checks that a slice contains map[string]interface{} type
+func ContainsOnlyMapType(s []interface{}) bool {
+	for _, v := range s {
+		switch v.(type) {
+		case map[string]interface{}:
+			continue
+			break
+		default:
+			return false
+		}
+	}
+	return true
 }
 
 // checks that a string slice contains a string value
@@ -140,6 +168,33 @@ func InStringSlice(ss []string, val string) bool {
 // convert a unix time to time object
 func UnixToTime(i int64) time.Time {
 	return time.Unix(i, 0)
+}
+
+// copy the contents in a map of interface{} to another similar map
+func CloneMapInterface(m map[string]interface{}) map[string]interface{} {
+	newMap := make(map[string]interface{})
+	for k, v := range m {
+		newMap[k] = v
+	}
+	return newMap
+}
+
+// clone a slice of map with key type of string and value of interface{}
+func CloneSliceMapInterface(sm []map[string]interface{}) []map[string]interface{} {
+	newSliceMap := make([]map[string]interface{}, len(sm))
+	for i, m := range sm {
+		newSliceMap[i] = CloneMapInterface(m)
+	}
+	return newSliceMap
+}
+
+// clone slice of interface{}
+func CloneSliceOfInterface(s []interface{}) []interface{} {
+	newSlice := make([]interface{}, len(s))
+	for i, v := range s {
+		newSlice[i] = v
+	} 
+	return newSlice
 }
 
 // check if a value supplied is int, float64, float32 or int64
@@ -183,4 +238,9 @@ func Env(key, defStr string) string {
 // check if a map is empty
 func IsMapEmpty(m map[string]interface{}) bool {
 	return len(GetMapKeys(m)) == 0
+}
+
+// converts int to string
+func IntToString(v int64) string {
+	return fmt.Sprintf("%d", v)
 }
