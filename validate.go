@@ -260,16 +260,18 @@ func Validate(shellData interface{}) error {
 		// back after validation.
 		for i, embed := range data["embeds"].([]interface{}) {
 			
+			var embedsClone []interface{}
 			shell := embed.(map[string]interface{})
 			
-			// remove embeds property in shellMap as we aren't interested in validating deeper levels
-			embedsClone := CloneSliceOfInterface(shell["embeds"].([]interface{}))
-			
-			// empty shell's embeds block
-			shell["embeds"] = []interface{}{}
+			// Ensure the shell has an `embed` block and the value type is a slice.
+			// Then temporary remove embeds property in the shell as we aren't interested in validating deeper levels
+			if shell["embeds"] != nil && IsSlice(shell["embeds"].([]interface{}))  {
+				embedsClone = CloneSliceOfInterface(shell["embeds"].([]interface{}))
+				shell["embeds"] = []interface{}{}
+			}
 
 			if err := Validate(shell); err != nil {
-				return errors.New(fmt.Sprintf("unable to validate embed in index %d. Reason: %s", i, err.Error()))
+				return errors.New(fmt.Sprintf("unable to validate embed at index %d. Reason: %s", i, err.Error()))
 			}
 
 			// reassign shell's embeds

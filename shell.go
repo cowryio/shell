@@ -208,6 +208,7 @@ func (self *Shell) AddAttributes(attributes map[string]interface{}, issuerPrivat
 	return nil
 }
 
+
 // checks if a block has a signature
 func(self *Shell) HasSignature(blockName string) bool {
 	switch blockName {

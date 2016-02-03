@@ -438,3 +438,116 @@ func TestSignaturesBlockMustHaveAttributesProperty(t *testing.T) {
 	expectedMsg := "missing `attributes` property in `signatures` block"
 	assert.Equal(t, expectedMsg, err.Error())
 }
+
+// TestInvalidEmbedsValueType tests that an error will occur if `embeds` block value type is not a
+// slice of objects
+func TestInvalidEmbedsValueType(t *testing.T) {
+	var str = `{ 
+		"signatures": { 
+			"meta": "abcde",
+			"ownership": "abcde",
+			"attributes": "abcde"
+		}, 
+		"meta": { 
+			"shell_id": "` + Sha1("stuff") + `", 
+			"shell_type": "cur", 
+			"created_at": 1453975575 
+		},
+		"ownership": { 
+			"type": "sole", 
+			"sole": {
+				"address_id": "1234"
+			}
+		},
+		"attributes": { "stuff": "stuff" },
+		"embeds": "abcdef"
+	}`
+	err := Validate(str)
+	assert.NotNil(t, err)
+	expectedMsg := "`embeds` block value type is invalid. Expects a list of only JSON objects"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+
+// TestNoErrorEmptyEmbedsBlock tests that no error will occur if `embeds` block 
+// is set to an empty slice
+func TestNoErrorEmptyEmbedsBlock(t *testing.T) {
+	var str = `{ 
+		"signatures": { 
+			"meta": "abcde",
+			"ownership": "abcde",
+			"attributes": "abcde"
+		}, 
+		"meta": { 
+			"shell_id": "` + Sha1("stuff") + `", 
+			"shell_type": "cur", 
+			"created_at": 1453975575 
+		},
+		"ownership": { 
+			"type": "sole", 
+			"sole": {
+				"address_id": "1234"
+			}
+		},
+		"attributes": { "stuff": "stuff" },
+		"embeds": []
+	}`
+	err := Validate(str)
+	assert.Nil(t, err)
+}
+
+// TestEmbedsBlockWithInvalidShell tests that an error will occur when the `embeds` block contains
+// an invalid shell 
+func TestEmbedsBlockWithInvalidShell(t *testing.T) {
+	var str = `{ 
+		"signatures": { 
+			"meta": "abcde",
+			"ownership": "abcde",
+			"attributes": "abcde"
+		}, 
+		"meta": { 
+			"shell_id": "` + Sha1("stuff") + `", 
+			"shell_type": "cur", 
+			"created_at": 1453975575 
+		},
+		"ownership": { 
+			"type": "sole", 
+			"sole": {
+				"address_id": "1234"
+			}
+		},
+		"attributes": { "stuff": "stuff" },
+		"embeds": [{ }]
+	}`
+	err := Validate(str)
+	assert.NotNil(t, err)
+	expectedMsg := "unable to validate embed at index 0. Reason: missing `meta` block"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestIgnoreDeeperEmbedsLevel test that the validator will not validate nested embeds
+// other that the ones in the shell been validated
+func TestIgnoreDeeperEmbedsLevel(t *testing.T) {
+	var str = `{ 
+		"signatures": { 
+			"meta": "abcde",
+			"ownership": "abcde",
+			"attributes": "abcde"
+		}, 
+		"meta": { 
+			"shell_id": "` + Sha1("stuff") + `", 
+			"shell_type": "cur", 
+			"created_at": 1453975575 
+		},
+		"ownership": { 
+			"type": "sole", 
+			"sole": {
+				"address_id": "1234"
+			}
+		},
+		"attributes": { "stuff": "stuff" },
+		"embeds": [{"signatures":{"meta":"abcde","ownership":"abcde"},"meta":{"created_at":1454443443,"shell_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","shell_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[{ "invalid": "embed" }],"attributes":{}}]
+	}`
+	err := Validate(str)
+	assert.Nil(t, err)
+}
