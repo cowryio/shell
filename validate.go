@@ -72,7 +72,7 @@ func ValidateMetaBlock(meta map[string]interface{}) error {
 func ValidateSignaturesBlock(signatures map[string]interface{}) error {
 
 	// must reject unexpected properties
-	accetableProps := []string{ "meta", "ownership", "attributes" } 
+	accetableProps := []string{ "meta", "ownership", "attributes", "embeds" } 
 	for prop, _ := range signatures {
 		if !InStringSlice(accetableProps, prop) {
 			return errors.New(fmt.Sprintf("`%s` property is unexpected in `signatures` block", prop))
@@ -100,6 +100,13 @@ func ValidateSignaturesBlock(signatures map[string]interface{}) error {
 	if signatures["attributes"] != nil {
 		if !IsStringValue(signatures["attributes"]) {
 			return errors.New("`signatures.attributes` value type is invalid. Expects string value")
+		}
+	}
+
+	// if signature has `embeds` property, it's value type must be string
+	if signatures["embeds"] != nil {
+		if !IsStringValue(signatures["embeds"]) {
+			return errors.New("`signatures.embeds` value type is invalid. Expects string value")
 		}
 	}
 	
@@ -255,10 +262,21 @@ func Validate(shellData interface{}) error {
     		return errors.New("`embeds` block value type is invalid. Expects a list of only JSON objects")
     	}
 
+    	embeds := data["embeds"].([]interface{})
+    	if len(embeds) == 0 {
+    		return nil
+    	}
+
+    	// ensure `embeds` signature exists
+    	var signatures = data["signatures"].(map[string]interface{})
+    	if signatures["embeds"] == nil {
+			return errors.New("missing `embeds` property in `signatures` block")
+		}
+
 		// validate each shells in the embeds block. Prevent validaton of the individual shells' embeds
 		// by empting their `embeds` block before calling Validate() on them. Reassign their `embeds` block
 		// back after validation.
-		for i, embed := range data["embeds"].([]interface{}) {
+		for i, embed := range embeds {
 			
 			var embedsClone []interface{}
 			shell := embed.(map[string]interface{})

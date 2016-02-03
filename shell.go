@@ -13,7 +13,7 @@ type Shell struct {
 	Signatures map[string]interface{} 		`json:"signatures"`
 	Meta map[string]interface{}				`json:"meta"`
 	Ownership map[string]interface{} 		`json:"ownership"`
-	Embeds []interface{}			 		`json:"embeds"`
+	Embeds []map[string]interface{} 		`json:"embeds"`
 	Attributes map[string]interface{}		`json:"attributes"`
 }
 
@@ -22,7 +22,7 @@ func initialize(shell *Shell) *Shell {
 	shell.Signatures = make(map[string]interface{})
 	shell.Meta = make(map[string]interface{})
 	shell.Ownership = make(map[string]interface{})
-	shell.Embeds = []interface{}{}
+	shell.Embeds = []map[string]interface{}{}
 	shell.Attributes = make(map[string]interface{})
 	return shell
 }
@@ -53,7 +53,9 @@ func Create(meta map[string]interface{}, issuerPrivateKey string) (*Shell, error
 	return shell, nil
 }
 
-// Creates a shell from a map
+// Creates a shell from a map. Validation of expected field is 
+// not performed. Use Validate() before calling this method if validation
+// is necessary
 func loadMap(data map[string]interface{}) (*Shell, error) {
 
 	var shell = &Shell{}
@@ -80,7 +82,9 @@ func loadMap(data map[string]interface{}) (*Shell, error) {
 
     // add embeds
     if embeds := data["embeds"]; embeds != nil {
-    	shell.Embeds = embeds.([]interface{})
+    	for _, m := range embeds.([]interface{}) {
+    		shell.Embeds = append(shell.Embeds, m.(map[string]interface{}))
+    	}
     }
 
     return shell, nil
@@ -110,14 +114,23 @@ func Load(shellStr string) (*Shell, error) {
 // Create a shell from a json string by converting
 // it to a map and then used to load a new shell instance
 func LoadJSON(jsonStr string) (*Shell, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-        return &Shell{}, errors.New("unable to parse json string");
+	data, err := JSONToMap(jsonStr)
+	if err != nil{
+        return &Shell{}, err;
     }
     if err := Validate(data); err != nil {
     	return &Shell{}, err
     }
 	return loadMap(data)  
+}
+
+// converts a json string to map 
+func JSONToMap(jsonStr string) (map[string]interface{}, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+        return make(map[string]interface{}), errors.New("unable to parse json string");
+    }
+	return data, nil
 }
 
 
@@ -126,17 +139,23 @@ func LoadJSON(jsonStr string) (*Shell, error) {
 // is store the `signatures` block
 func(self *Shell) Sign(blockName string, privateKey string) (string, error) {
 	
-	var canonicalMap string
+	var canonicalString string
 
 	switch blockName {
 	case "meta":
-		canonicalMap = GetCanonicalMapString(self.Meta)
+		canonicalString = GetCanonicalMapString(self.Meta)
 		break
 	case "ownership":
-		canonicalMap = GetCanonicalMapString(self.Ownership)
+		canonicalString = GetCanonicalMapString(self.Ownership)
 		break
 	case "attributes":
-		canonicalMap = GetCanonicalMapString(self.Attributes)
+		canonicalString = GetCanonicalMapString(self.Attributes)
+		break
+	case "embeds": 
+		for _, shell := range self.Embeds {
+			canonicalString += ":" + GetCanonicalMapString(shell["meta"].(map[string]interface{}))
+		}
+		canonicalString = strings.Trim(canonicalString, ":")
 		break
 	default:
 		return "", errors.New("block unknown")
@@ -147,7 +166,7 @@ func(self *Shell) Sign(blockName string, privateKey string) (string, error) {
 		return "", errors.New(fmt.Sprintf("Private Key Error: %v", err))
 	}
 
-	signature, err := signer.Sign([]byte(canonicalMap))
+	signature, err := signer.Sign([]byte(canonicalString))
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Signature Error: %v", err))
 	}
@@ -208,11 +227,25 @@ func (self *Shell) AddAttributes(attributes map[string]interface{}, issuerPrivat
 	return nil
 }
 
+// add a shell to the `embeds` block
+func (self *Shell) AddEmbed(shell *Shell, issuerPrivateKey string) error {
+
+	self.Embeds = append(self.Embeds, shell.ToMap())
+
+	// sign block
+	_, err := self.Sign("embeds", issuerPrivateKey)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 
 // checks if a block has a signature
 func(self *Shell) HasSignature(blockName string) bool {
 	switch blockName {
-	case "meta", "ownership", "attributes":
+	case "meta", "ownership", "attributes", "embeds":
 		return self.Signatures[blockName] != nil && strings.TrimSpace(self.Signatures[blockName].(string)) != ""
 		break
 	default:
@@ -225,15 +258,21 @@ func(self *Shell) HasSignature(blockName string) bool {
 // all blocks are verified.
 func(self *Shell) Verify(blockName, issuerPublicKey string) error {
 
-	var canonicalMap string
+	var canonicalString string
 
 	switch blockName {
 	case "meta":
-		canonicalMap = GetCanonicalMapString(self.Meta)
+		canonicalString = GetCanonicalMapString(self.Meta)
 	case "ownership":
-		canonicalMap = GetCanonicalMapString(self.Ownership)
+		canonicalString = GetCanonicalMapString(self.Ownership)
 	case "attributes":
-		canonicalMap = GetCanonicalMapString(self.Attributes)
+		canonicalString = GetCanonicalMapString(self.Attributes)
+	case "embeds": 
+		for _, shell := range self.Embeds {
+			canonicalString += ":" + GetCanonicalMapString(shell["meta"].(map[string]interface{}))
+		}
+		canonicalString = strings.Trim(canonicalString, ":")
+		break
 	default:
 		return errors.New("block name "+blockName+" is unknown")
 	}
@@ -248,7 +287,7 @@ func(self *Shell) Verify(blockName, issuerPublicKey string) error {
 		return errors.New("block `"+blockName+"` has no signature")
 	}
 
-	return signer.Verify([]byte(canonicalMap), self.Signatures[blockName].(string))
+	return signer.Verify([]byte(canonicalString), self.Signatures[blockName].(string))
 }  
 
 // return shell as raw JSON string
@@ -257,9 +296,29 @@ func(self *Shell) JSON() string {
 	return string(bs)
 }
 
+// returns a map representation of the shell
+func(self *Shell) ToMap() map[string]interface{} {
+	jsonStr := self.JSON()
+	var dat map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &dat); err != nil {
+        panic(err)
+    }
+    return dat
+}
+
 // return shell as a base64 json encoded string
 func(self *Shell) Encode() string {
 	jsonStr := self.JSON()
 	return ToBase64([]byte(jsonStr))
+}
+
+// clone a shell
+func(self *Shell) Clone() *Shell {
+	jsonStr := self.JSON()
+	shell, err := LoadJSON(jsonStr)
+	if err != nil {
+		panic(err)
+	}
+	return shell
 }
 

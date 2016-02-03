@@ -179,6 +179,18 @@ func TestAttributesSignatureTypeMustBeString(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
+// TestEmbedsSignatureTypeMustBeString test that the signatures.embeds property value type is string
+func TestEmbedsSignatureTypeMustBeString(t *testing.T) {
+	d := map[string]interface{}{
+		"meta": "abcde",
+		"embeds": 1234,
+	}
+	err := ValidateSignaturesBlock(d)
+	assert.NotNil(t, err)
+	expectedMsg := "`signatures.embeds` value type is invalid. Expects string value"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
 // TestMetaBlockHasUnexpectedProperty tests that an error occurs when the ownership block
 // contains an unexpected property
 func TestOwnershipBlockHasUnexpectedProperty(t *testing.T) {
@@ -503,7 +515,8 @@ func TestEmbedsBlockWithInvalidShell(t *testing.T) {
 		"signatures": { 
 			"meta": "abcde",
 			"ownership": "abcde",
-			"attributes": "abcde"
+			"attributes": "abcde",
+			"embeds": "abcde"
 		}, 
 		"meta": { 
 			"shell_id": "` + Sha1("stuff") + `", 
@@ -532,7 +545,8 @@ func TestIgnoreDeeperEmbedsLevel(t *testing.T) {
 		"signatures": { 
 			"meta": "abcde",
 			"ownership": "abcde",
-			"attributes": "abcde"
+			"attributes": "abcde",
+			"embeds": "abcde"
 		}, 
 		"meta": { 
 			"shell_id": "` + Sha1("stuff") + `", 
