@@ -290,6 +290,12 @@ func(self *Shell) Verify(blockName, issuerPublicKey string) error {
 	return signer.Verify([]byte(canonicalString), self.Signatures[blockName].(string))
 }  
 
+// checks if a shell object current state can
+// pass as a valid shell
+func(self *Shell) IsValid() error {
+	return Validate(self.JSON())
+}
+
 // return shell as raw JSON string
 func(self *Shell) JSON() string {
 	bs, _ := json.Marshal(&self)
