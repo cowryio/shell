@@ -23,7 +23,7 @@ func ParsePublicKey(pemBytes []byte) (*Signer, error) {
 	}
 
 	switch block.Type {
-	case "PUBLIC KEY":
+	case "RSA PUBLIC KEY", "PUBLIC KEY":
 		rsa, err := x509.ParsePKIXPublicKey(block.Bytes)
 		if err != nil {
 			return nil, err
@@ -32,6 +32,7 @@ func ParsePublicKey(pemBytes []byte) (*Signer, error) {
 	default:
 		return nil, fmt.Errorf("unsupported key type %q", block.Type)
 	}
+	return nil, nil
 }
 
 // Parse a private key
