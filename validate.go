@@ -55,6 +55,7 @@ func ValidateMetaBlock(meta map[string]interface{}) error {
 		// created_date should not be too old or in the future
 		createdAt := UnixToTime(ToInt64(meta["created_at"]))
 		startTime := UnixToTime(START_TIME)
+
 		if createdAt.Before(startTime) {
 			return errors.New("`created_at` value is too far in the past. Expects unix time on or after " + startTime.Format(time.RFC3339))
 		} else if createdAt.After(time.Now().UTC()) {

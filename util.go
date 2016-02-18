@@ -207,19 +207,34 @@ func IsNumberValue(val interface{}) bool {
 	}
 }
 
+// cast int value to float64
+func IntToFloat64(num interface{}) float64 {
+	switch v := num.(type) {
+	case int:
+		return float64(v)
+	case int64:
+		return float64(v)
+	default:
+		panic("failed to cast unsupported type to float64")
+	}
+}
+
 // converts int, float32 and float64 to int64
 func ToInt64(num interface{}) int64 {
 	switch v := num.(type) {
 	case int:
-	case int64:
 		return int64(v)
 		break
-	case float32:
+	case int64:
+		return v
+		break
 	case float64:
 		return int64(v)
+		break
 	case string:
 		val, _ := strconv.ParseInt(v, 10, 64)
 		return val
+		break
 	default:
 		panic("type is unsupported")
 	}
