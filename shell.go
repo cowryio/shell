@@ -41,6 +41,8 @@ func Create(meta map[string]interface{}, issuerPrivateKey string) (*Shell, error
 	// validate meta
 	if err := ValidateMetaBlock(meta); err != nil {
     	return &Shell{}, err
+    } else {
+		meta["created_at"] = IntToFloat64(meta["created_at"])
     }
 
     // set shell Meta field and create a meta signature
@@ -91,7 +93,7 @@ func loadMap(data map[string]interface{}) (*Shell, error) {
 }
 
 // Creates a new shell from a raw json or base 64 encoded json string.
-// If the string passed in starts with "{", it is cos a JSON string, otherwise, it assumes string is base 64 encoded and
+// If the string passed in starts with "{", it is considered a JSON string, otherwise, it assumes string is base 64 encoded and
 // will attempt to decoded it. 
 func Load(shellStr string) (*Shell, error) {
 	shellStr = strings.TrimSpace(shellStr)
@@ -127,7 +129,8 @@ func LoadJSON(jsonStr string) (*Shell, error) {
 // converts a json string to map 
 func JSONToMap(jsonStr string) (map[string]interface{}, error) {
 	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+	d := json.NewDecoder(strings.NewReader(jsonStr))
+	if err := d.Decode(&data); err != nil {
         return make(map[string]interface{}), errors.New("unable to parse json string");
     }
 	return data, nil
@@ -286,7 +289,7 @@ func(self *Shell) Verify(blockName, issuerPublicKey string) error {
 	if !self.HasSignature(blockName) {
 		return errors.New("block `"+blockName+"` has no signature")
 	}
-
+	
 	return signer.Verify([]byte(canonicalString), self.Signatures[blockName].(string))
 }  
 
