@@ -92,7 +92,8 @@ func loadMap(data map[string]interface{}) (*Shell, error) {
     return shell, nil
 }
 
-// Creates a new shell from a raw json or base 64 encoded json string.
+// Creates a new shell from a raw json or base 64 encoded json string. It does not 
+// attempt to sign the blocks. 
 // If the string passed in starts with "{", it is considered a JSON string, otherwise, it assumes string is base 64 encoded and
 // will attempt to decoded it. 
 func Load(shellStr string) (*Shell, error) {
@@ -329,5 +330,10 @@ func(self *Shell) Clone() *Shell {
 		panic(err)
 	}
 	return shell
+}
+
+// checks if the ownership block is field
+func(self *Shell) HasOwnership() bool {
+	return len(self.Ownership) > 0
 }
 

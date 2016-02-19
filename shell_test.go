@@ -139,7 +139,7 @@ func TestAddOwnership(t *testing.T) {
 	var ownership = map[string]interface{}{
 		"type": "sole",
    		"sole": map[string]interface{}{
-   					"address_id": "abcde",
+   			"address_id": "abcde",
    		},
    		"status": "transferred",
 	}
@@ -300,4 +300,26 @@ func TestCloneShell(t *testing.T) {
 	assert.Exactly(t, shell, clone) 
 	shell.Signatures["meta"] = "blah_blah"
 	assert.NotEmpty(t, shell.Signatures["meta"], clone.Signatures["meta"])
+}
+
+// TestHasOwnershipFalse tests that a shell does not have any ownership information
+func TestHasOwnershipFalse(t *testing.T) {
+	shell, err := LoadJSON(TEST_SHELL_DATA[0]);
+	assert.Nil(t, err)
+	assert.Equal(t, shell.HasOwnership(), false)
+}
+
+// TestHasOwnershipTrue tests that a shell has ownership information
+func TestHasOwnershipTrue(t *testing.T) {
+	shell, err := LoadJSON(TEST_SHELL_DATA[0]);
+	assert.Nil(t, err)
+	var ownership = map[string]interface{}{
+		"type": "sole",
+   		"sole": map[string]interface{}{
+			"address_id": "abcde",
+   		},
+	}
+	err = shell.AddOwnership(ownership, sampleKeys[0])
+	assert.Nil(t, err)
+	assert.Equal(t, shell.HasOwnership(), true)
 }
