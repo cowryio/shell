@@ -341,3 +341,8 @@ func(self *Shell) HasOwnership() bool {
 func(self *Shell) HasAttributes() bool {
 	return len(self.Attributes) > 0
 }
+
+// checks if the embeds block contains any property
+func(self *Shell) HasEmbeds() bool {
+	return len(self.Embeds) > 0
+}

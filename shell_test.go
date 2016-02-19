@@ -342,3 +342,18 @@ func TestHasAttributesFalse(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, shell.HasAttributes(), false)
 }
+
+// TestHasEmbedsTrue tests that a shell has embeds information
+func TestHasEmbedsTrue(t *testing.T) {
+	sh := NewValidShell()
+	embed := NewValidShell()
+	err := sh.AddEmbed(embed, sampleKeys[0])
+	assert.Nil(t, err)
+	assert.Equal(t, sh.HasEmbeds(), true)
+}
+
+// TestHasEmbedsFalse tests that a shell has no embeds information
+func TestHasEmbedsFalse(t *testing.T) {
+	sh := NewValidShell()
+	assert.Equal(t, sh.HasEmbeds(), false)
+}
