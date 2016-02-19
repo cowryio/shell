@@ -332,8 +332,12 @@ func(self *Shell) Clone() *Shell {
 	return shell
 }
 
-// checks if the ownership block is field
+// checks if the ownership block contains any property
 func(self *Shell) HasOwnership() bool {
 	return len(self.Ownership) > 0
 }
 
+// checks if the attributes block contains any property
+func(self *Shell) HasAttributes() bool {
+	return len(self.Attributes) > 0
+}

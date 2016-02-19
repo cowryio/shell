@@ -323,3 +323,22 @@ func TestHasOwnershipTrue(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, shell.HasOwnership(), true)
 }
+
+// TestHasAttributesTrue tests that a shell has attributes information
+func TestHasAttributesTrue(t *testing.T) {
+	shell, err := LoadJSON(TEST_SHELL_DATA[0]);
+	assert.Nil(t, err)
+	var attrs = map[string]interface{}{
+		"some_data": "some_value",
+	}
+	err = shell.AddAttributes(attrs, sampleKeys[0])
+	assert.Nil(t, err)
+	assert.Equal(t, shell.HasAttributes(), true)
+}
+
+// TestHasAttributesFalse tests that a shell does not have attributes information
+func TestHasAttributesFalse(t *testing.T) {
+	shell, err := LoadJSON(TEST_SHELL_DATA[0]);
+	assert.Nil(t, err)
+	assert.Equal(t, shell.HasAttributes(), false)
+}
