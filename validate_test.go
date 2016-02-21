@@ -1,7 +1,7 @@
-package shell
+package seed
 
 import "testing"
-import "github.com/cowryio/shell/Godeps/_workspace/src/github.com/stretchr/testify/assert"
+import "github.com/ellcrys/seed/Godeps/_workspace/src/github.com/stretchr/testify/assert"
 
 // TestInvalidJSON tests that an invalid json string returns an error
 func TestInvalidJSON(t *testing.T) {
@@ -24,31 +24,31 @@ func TestMetaBlockHasUnexpectedProperty(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestMetaMustHaveShellIDProperty tests that a meta block data must have a `shell_id` property
-func TestMetaMustHaveShellIDProperty(t *testing.T) {
+// TestMetaMustHaveSeedIDProperty tests that a meta block data must have a `seed_id` property
+func TestMetaMustHaveSeedIDProperty(t *testing.T) {
 	var d = make(map[string]interface{})
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
-	expectedMsg := "`meta` block is missing `shell_id` property"
+	expectedMsg := "`meta` block is missing `seed_id` property"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestMetaMustHaveShellTypeProperty tests that shell_type property is set
-func TestMetaMustHaveShellTypeProperty(t *testing.T) {
+// TestMetaMustHaveSeedTypeProperty tests that seed_type property is set
+func TestMetaMustHaveSeedTypeProperty(t *testing.T) {
 	d := map[string]interface{}{
-		"shell_id": 1234,
+		"seed_id": 1234,
 	}
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
-	expectedMsg := "`meta` block is missing `shell_type` property"
+	expectedMsg := "`meta` block is missing `seed_type` property"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
 // TestMetaMustHaveCreatedAtProperty tests that created_at property is set
 func TestMetaMustHaveCreatedAtProperty(t *testing.T) {
 	d := map[string]interface{}{
-		"shell_id":   1234,
-		"shell_type": "coupon",
+		"seed_id":   1234,
+		"seed_type": "coupon",
 	}
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
@@ -56,50 +56,50 @@ func TestMetaMustHaveCreatedAtProperty(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestShellIDNotString tests that shell_id value type must be string
-func TestShellIDMustString(t *testing.T) {
+// TestSeedIDNotString tests that seed_id value type must be string
+func TestSeedIDMustString(t *testing.T) {
 	d := map[string]interface{}{
-		"shell_id":   1234,
-		"shell_type": "coupon",
+		"seed_id":   1234,
+		"seed_type": "coupon",
 		"created_at": 1000,
 	}
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
-	expectedMsg := "`meta.shell_id` value type is invalid. Expects string value"
+	expectedMsg := "`meta.seed_id` value type is invalid. Expects string value"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestShellIDLengthInvalid tests that a shell_id must have 40 characters
-func TestShellIDLengthInvalid(t *testing.T) {
+// TestSeedIDLengthInvalid tests that a seed_id must have 40 characters
+func TestSeedIDLengthInvalid(t *testing.T) {
 	d := map[string]interface{}{
-		"shell_id":   "abcd",
-		"shell_type": "coupon",
+		"seed_id":   "abcd",
+		"seed_type": "coupon",
 		"created_at": 1000,
 	}
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
-	expectedMsg := "`meta.shell_id` must have 40 characters. Preferrable a UUIDv4 SHA1 hashed string"
+	expectedMsg := "`meta.seed_id` must have 40 characters. Preferrable a UUIDv4 SHA1 hashed string"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestShellTypeMustBeString tests that shell_type value type must be string
-func TestShellTypeMustBeString(t *testing.T) {
+// TestSeedTypeMustBeString tests that seed_type value type must be string
+func TestSeedTypeMustBeString(t *testing.T) {
 	d := map[string]interface{}{
-		"shell_id":   Sha1("abcd"),
-		"shell_type": 123,
+		"seed_id":   Sha1("abcd"),
+		"seed_type": 123,
 		"created_at": 1000,
 	}
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
-	expectedMsg := "`meta.shell_type` value type is invalid. Expects string value"
+	expectedMsg := "`meta.seed_type` value type is invalid. Expects string value"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
 // TestCreatedAtMustBeNumber tests that created_at value type must be a number
 func TestCreatedAtMustBeNumber(t *testing.T) {
 	d := map[string]interface{}{
-		"shell_id":   Sha1("abcd"),
-		"shell_type": "coupon",
+		"seed_id":   Sha1("abcd"),
+		"seed_type": "coupon",
 		"created_at": "111",
 	}
 	err := ValidateMetaBlock(d)
@@ -111,8 +111,8 @@ func TestCreatedAtMustBeNumber(t *testing.T) {
 // TestCreatedAtBeforeStartTime test that a created_at time before the start/launch time is invalid
 func TestCreatedAtBeforeStartTime(t *testing.T) {
 	d := map[string]interface{}{
-		"shell_id":   Sha1("abcd"),
-		"shell_type": "coupon",
+		"seed_id":   Sha1("abcd"),
+		"seed_type": "coupon",
 		"created_at": 100000,
 	}
 	err := ValidateMetaBlock(d)
@@ -332,8 +332,8 @@ func TestInvalidMetaValueType(t *testing.T) {
 func TestMustHaveSignatureBlock(t *testing.T) {
 	var str = `{ 
 		"meta": { 
-			"shell_id": "` + Sha1("stuff") + `", 
-			"shell_type": "cur", 
+			"seed_id": "` + Sha1("stuff") + `", 
+			"seed_type": "cur", 
 			"created_at": 1453975575 
 		} 
 	}`
@@ -348,8 +348,8 @@ func TestInvalidSignaturesBlockValueType(t *testing.T) {
 	var str = `{ 
 		"signatures": "a_string", 
 		"meta": { 
-			"shell_id": "` + Sha1("stuff") + `", 
-			"shell_type": "cur", 
+			"seed_id": "` + Sha1("stuff") + `", 
+			"seed_type": "cur", 
 			"created_at": 1453975575 
 		} 
 	}`
@@ -366,8 +366,8 @@ func TestInvalidOwnershipBlockValueType(t *testing.T) {
 			"meta": "abcde"
 		}, 
 		"meta": { 
-			"shell_id": "` + Sha1("stuff") + `", 
-			"shell_type": "cur", 
+			"seed_id": "` + Sha1("stuff") + `", 
+			"seed_type": "cur", 
 			"created_at": 1453975575 
 		},
 		"ownership": "abcde"
@@ -386,8 +386,8 @@ func TestSignaturesBlockMustHaveOwnershipProperty(t *testing.T) {
 			"meta": "abcde"
 		}, 
 		"meta": { 
-			"shell_id": "` + Sha1("stuff") + `", 
-			"shell_type": "cur", 
+			"seed_id": "` + Sha1("stuff") + `", 
+			"seed_type": "cur", 
 			"created_at": 1453975575 
 		},
 		"ownership": { "stuff": "stuff" }
@@ -406,8 +406,8 @@ func TestInvalidAttributesBlockValueType(t *testing.T) {
 			"ownership": "abcde"
 		}, 
 		"meta": { 
-			"shell_id": "` + Sha1("stuff") + `", 
-			"shell_type": "cur", 
+			"seed_id": "` + Sha1("stuff") + `", 
+			"seed_type": "cur", 
 			"created_at": 1453975575 
 		},
 		"ownership": { 
@@ -433,8 +433,8 @@ func TestSignaturesBlockMustHaveAttributesProperty(t *testing.T) {
 			"ownership": "abcde"
 		}, 
 		"meta": { 
-			"shell_id": "` + Sha1("stuff") + `", 
-			"shell_type": "cur", 
+			"seed_id": "` + Sha1("stuff") + `", 
+			"seed_type": "cur", 
 			"created_at": 1453975575 
 		},
 		"ownership": { 
@@ -461,8 +461,8 @@ func TestInvalidEmbedsValueType(t *testing.T) {
 			"attributes": "abcde"
 		}, 
 		"meta": { 
-			"shell_id": "` + Sha1("stuff") + `", 
-			"shell_type": "cur", 
+			"seed_id": "` + Sha1("stuff") + `", 
+			"seed_type": "cur", 
 			"created_at": 1453975575 
 		},
 		"ownership": { 
@@ -491,8 +491,8 @@ func TestNoErrorEmptyEmbedsBlock(t *testing.T) {
 			"attributes": "abcde"
 		}, 
 		"meta": { 
-			"shell_id": "` + Sha1("stuff") + `", 
-			"shell_type": "cur", 
+			"seed_id": "` + Sha1("stuff") + `", 
+			"seed_type": "cur", 
 			"created_at": 1453975575 
 		},
 		"ownership": { 
@@ -508,9 +508,9 @@ func TestNoErrorEmptyEmbedsBlock(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-// TestEmbedsBlockWithInvalidShell tests that an error will occur when the `embeds` block contains
-// an invalid shell 
-func TestEmbedsBlockWithInvalidShell(t *testing.T) {
+// TestEmbedsBlockWithInvalidSeed tests that an error will occur when the `embeds` block contains
+// an invalid seed 
+func TestEmbedsBlockWithInvalidSeed(t *testing.T) {
 	var str = `{ 
 		"signatures": { 
 			"meta": "abcde",
@@ -519,8 +519,8 @@ func TestEmbedsBlockWithInvalidShell(t *testing.T) {
 			"embeds": "abcde"
 		}, 
 		"meta": { 
-			"shell_id": "` + Sha1("stuff") + `", 
-			"shell_type": "cur", 
+			"seed_id": "` + Sha1("stuff") + `", 
+			"seed_type": "cur", 
 			"created_at": 1453975575 
 		},
 		"ownership": { 
@@ -539,7 +539,7 @@ func TestEmbedsBlockWithInvalidShell(t *testing.T) {
 }
 
 // TestIgnoreDeeperEmbedsLevel test that the validator will not validate nested embeds
-// other that the ones in the shell been validated
+// other that the ones in the seed been validated
 func TestIgnoreDeeperEmbedsLevel(t *testing.T) {
 	var str = `{ 
 		"signatures": { 
@@ -549,8 +549,8 @@ func TestIgnoreDeeperEmbedsLevel(t *testing.T) {
 			"embeds": "abcde"
 		}, 
 		"meta": { 
-			"shell_id": "` + Sha1("stuff") + `", 
-			"shell_type": "cur", 
+			"seed_id": "` + Sha1("stuff") + `", 
+			"seed_type": "cur", 
 			"created_at": 1453975575 
 		},
 		"ownership": { 
@@ -560,7 +560,7 @@ func TestIgnoreDeeperEmbedsLevel(t *testing.T) {
 			}
 		},
 		"attributes": { "stuff": "stuff" },
-		"embeds": [{"signatures":{"meta":"abcde","ownership":"abcde"},"meta":{"created_at":1454443443,"shell_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","shell_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[{ "invalid": "embed" }],"attributes":{}}]
+		"embeds": [{"signatures":{"meta":"abcde","ownership":"abcde"},"meta":{"created_at":1454443443,"seed_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","seed_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[{ "invalid": "embed" }],"attributes":{}}]
 	}`
 	err := Validate(str)
 	assert.Nil(t, err)

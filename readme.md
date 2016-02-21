@@ -1,5 +1,5 @@
-### What is a Shell
+### What is a Seed
 
-A shell is a signed container of electronic value that can be transferred through a
-shell host, email or any text-enabled communication platform. Shells are fully signed to guarantee
+A seed is a signed container of electronic value that can be transferred through a
+seed host, email or any text-enabled communication platform. Seeds are fully signed to guarantee
 integrity. 

@@ -1,15 +1,16 @@
-// A shell represents a container of information
+// A seed represents a container of information
 // that is considered valueable.
-package shell
+package seed
 
 import (
 	"encoding/json"
 	"errors"
 	"strings"
 	"fmt"
+	"github.com/ellcrys/crypto"
 )
 
-type Shell struct {
+type Seed struct {
 	Signatures map[string]interface{} 		`json:"signatures"`
 	Meta map[string]interface{}				`json:"meta"`
 	Ownership map[string]interface{} 		`json:"ownership"`
@@ -17,112 +18,112 @@ type Shell struct {
 	Attributes map[string]interface{}		`json:"attributes"`
 }
 
-// Initialize a shell
-func initialize(shell *Shell) *Shell {
-	shell.Signatures = make(map[string]interface{})
-	shell.Meta = make(map[string]interface{})
-	shell.Ownership = make(map[string]interface{})
-	shell.Embeds = []map[string]interface{}{}
-	shell.Attributes = make(map[string]interface{})
-	return shell
+// Initialize a seed
+func initialize(seed *Seed) *Seed {
+	seed.Signatures = make(map[string]interface{})
+	seed.Meta = make(map[string]interface{})
+	seed.Ownership = make(map[string]interface{})
+	seed.Embeds = []map[string]interface{}{}
+	seed.Attributes = make(map[string]interface{})
+	return seed
 }
 
-// creates an shell instances and initializes it
-func Empty() *Shell {
-	sh := &Shell{}
+// creates an seed instances and initializes it
+func Empty() *Seed {
+	sh := &Seed{}
 	return initialize(sh)
 }
 
-// Create a shell.The new shell is immediately signed using the issuer's private key
-func Create(meta map[string]interface{}, issuerPrivateKey string) (*Shell, error) {
+// Create a seed.The new seed is immediately signed using the issuer's private key
+func Create(meta map[string]interface{}, issuerPrivateKey string) (*Seed, error) {
 
-	shell := initialize(&Shell{})
+	seed := initialize(&Seed{})
 
 	// validate meta
 	if err := ValidateMetaBlock(meta); err != nil {
-    	return &Shell{}, err
+    	return &Seed{}, err
     } else {
 		meta["created_at"] = IntToFloat64(meta["created_at"])
     }
 
-    // set shell Meta field and create a meta signature
-	shell.Meta = meta
-	_, err := shell.Sign("meta", issuerPrivateKey)
+    // set seed Meta field and create a meta signature
+	seed.Meta = meta
+	_, err := seed.Sign("meta", issuerPrivateKey)
 	if err != nil {
-		return &Shell{}, err
+		return &Seed{}, err
 	}
 
-	return shell, nil
+	return seed, nil
 }
 
-// Creates a shell from a map. Validation of expected field is 
+// Creates a seed from a map. Validation of expected field is 
 // not performed. Use Validate() before calling this method if validation
 // is necessary
-func loadMap(data map[string]interface{}) (*Shell, error) {
+func loadMap(data map[string]interface{}) (*Seed, error) {
 
-	var shell = &Shell{}
+	var seed = &Seed{}
 
 	// add signatures
     if signatures := data["signatures"]; signatures != nil {
-    	shell.Signatures = data["signatures"].(map[string]interface{})
+    	seed.Signatures = data["signatures"].(map[string]interface{})
     }
 
     // add meta
     if meta := data["meta"]; meta != nil {
-    	shell.Meta = data["meta"].(map[string]interface{})
+    	seed.Meta = data["meta"].(map[string]interface{})
     }
 
     // add ownership
     if ownership := data["ownership"]; ownership != nil {
-    	shell.Ownership = data["ownership"].(map[string]interface{})
+    	seed.Ownership = data["ownership"].(map[string]interface{})
     }
 
     // add attributes
     if attributes := data["attributes"]; attributes != nil {
-    	shell.Attributes = data["attributes"].(map[string]interface{})
+    	seed.Attributes = data["attributes"].(map[string]interface{})
     }
 
     // add embeds
     if embeds := data["embeds"]; embeds != nil {
     	for _, m := range embeds.([]interface{}) {
-    		shell.Embeds = append(shell.Embeds, m.(map[string]interface{}))
+    		seed.Embeds = append(seed.Embeds, m.(map[string]interface{}))
     	}
     }
 
-    return shell, nil
+    return seed, nil
 }
 
-// Creates a new shell from a raw json or base 64 encoded json string. It does not 
+// Creates a new seed from a raw json or base 64 encoded json string. It does not 
 // attempt to sign the blocks. 
 // If the string passed in starts with "{", it is considered a JSON string, otherwise, it assumes string is base 64 encoded and
 // will attempt to decoded it. 
-func Load(shellStr string) (*Shell, error) {
-	shellStr = strings.TrimSpace(shellStr)
-	if shellStr == "" {
-		return &Shell{}, errors.New("Cannot load empty shell string")
+func Load(seedStr string) (*Seed, error) {
+	seedStr = strings.TrimSpace(seedStr)
+	if seedStr == "" {
+		return &Seed{}, errors.New("Cannot load empty seed string")
 	} else {
-		if fmt.Sprintf("%c", shellStr[0]) == "{" {					// json string
-			return LoadJSON(shellStr)
+		if fmt.Sprintf("%c", seedStr[0]) == "{" {					// json string
+			return LoadJSON(seedStr)
 		} else {
-			decodedShellStr, err := FromBase64(shellStr)
+			decodedSeedStr, err := crypto.FromBase64(seedStr)
 			if err != nil {
-				return &Shell{}, errors.New("unable to decode encoded shell string")
+				return &Seed{}, errors.New("unable to decode encoded seed string")
 			}
-			return LoadJSON(decodedShellStr)
+			return LoadJSON(decodedSeedStr)
 		}
 	}
 }
 
 
-// Create a shell from a json string by converting
-// it to a map and then used to load a new shell instance
-func LoadJSON(jsonStr string) (*Shell, error) {
+// Create a seed from a json string by converting
+// it to a map and then used to load a new seed instance
+func LoadJSON(jsonStr string) (*Seed, error) {
 	data, err := JSONToMap(jsonStr)
 	if err != nil{
-        return &Shell{}, err;
+        return &Seed{}, err;
     }
     if err := Validate(data); err != nil {
-    	return &Shell{}, err
+    	return &Seed{}, err
     }
 	return loadMap(data)  
 }
@@ -138,10 +139,10 @@ func JSONToMap(jsonStr string) (map[string]interface{}, error) {
 }
 
 
-// Sign any shell block by creating a canonical string representation
+// Sign any seed block by creating a canonical string representation
 // of the block value and signing with the issuer's private key. The computed signature
 // is store the `signatures` block
-func(self *Shell) Sign(blockName string, privateKey string) (string, error) {
+func(self *Seed) Sign(blockName string, privateKey string) (string, error) {
 	
 	var canonicalString string
 
@@ -156,8 +157,8 @@ func(self *Shell) Sign(blockName string, privateKey string) (string, error) {
 		canonicalString = GetCanonicalMapString(self.Attributes)
 		break
 	case "embeds": 
-		for _, shell := range self.Embeds {
-			canonicalString += ":" + GetCanonicalMapString(shell["meta"].(map[string]interface{}))
+		for _, seed := range self.Embeds {
+			canonicalString += ":" + GetCanonicalMapString(seed["meta"].(map[string]interface{}))
 		}
 		canonicalString = strings.Trim(canonicalString, ":")
 		break
@@ -165,7 +166,7 @@ func(self *Shell) Sign(blockName string, privateKey string) (string, error) {
 		return "", errors.New("block unknown")
 	}
 
-	signer, err := ParsePrivateKey([]byte(privateKey))
+	signer, err := crypto.ParsePrivateKey([]byte(privateKey))
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Private Key Error: %v", err))
 	}
@@ -180,7 +181,7 @@ func(self *Shell) Sign(blockName string, privateKey string) (string, error) {
 }
 
 // Assign and sign a valid meta value to the meta block
-func(self *Shell) AddMeta(meta map[string]interface{}, issuerPrivateKey string) error {
+func(self *Seed) AddMeta(meta map[string]interface{}, issuerPrivateKey string) error {
 
 	// validate meta
 	if err := ValidateMetaBlock(meta); err != nil {
@@ -199,7 +200,7 @@ func(self *Shell) AddMeta(meta map[string]interface{}, issuerPrivateKey string) 
 }
 
 // Assign and sign a valid ownership data to the ownership block
-func (self *Shell) AddOwnership(ownership map[string]interface{}, issuerPrivateKey string) error {
+func (self *Seed) AddOwnership(ownership map[string]interface{}, issuerPrivateKey string) error {
 
 	// validate 
 	if err := ValidateOwnershipBlock(ownership); err != nil {
@@ -218,7 +219,7 @@ func (self *Shell) AddOwnership(ownership map[string]interface{}, issuerPrivateK
 }
 
 // Assign a attribute data to the attributes bloc
-func (self *Shell) AddAttributes(attributes map[string]interface{}, issuerPrivateKey string) error {
+func (self *Seed) AddAttributes(attributes map[string]interface{}, issuerPrivateKey string) error {
 	
 	self.Attributes = attributes
 
@@ -231,10 +232,10 @@ func (self *Shell) AddAttributes(attributes map[string]interface{}, issuerPrivat
 	return nil
 }
 
-// add a shell to the `embeds` block
-func (self *Shell) AddEmbed(shell *Shell, issuerPrivateKey string) error {
+// add a seed to the `embeds` block
+func (self *Seed) AddEmbed(seed *Seed, issuerPrivateKey string) error {
 
-	self.Embeds = append(self.Embeds, shell.ToMap())
+	self.Embeds = append(self.Embeds, seed.ToMap())
 
 	// sign block
 	_, err := self.Sign("embeds", issuerPrivateKey)
@@ -247,7 +248,7 @@ func (self *Shell) AddEmbed(shell *Shell, issuerPrivateKey string) error {
 
 
 // checks if a block has a signature
-func(self *Shell) HasSignature(blockName string) bool {
+func(self *Seed) HasSignature(blockName string) bool {
 	switch blockName {
 	case "meta", "ownership", "attributes", "embeds":
 		return self.Signatures[blockName] != nil && strings.TrimSpace(self.Signatures[blockName].(string)) != ""
@@ -260,7 +261,7 @@ func(self *Shell) HasSignature(blockName string) bool {
 
 // Verify one or all block. If blockName is set to an empty string,
 // all blocks are verified.
-func(self *Shell) Verify(blockName, issuerPublicKey string) error {
+func(self *Seed) Verify(blockName, issuerPublicKey string) error {
 
 	var canonicalString string
 
@@ -272,8 +273,8 @@ func(self *Shell) Verify(blockName, issuerPublicKey string) error {
 	case "attributes":
 		canonicalString = GetCanonicalMapString(self.Attributes)
 	case "embeds": 
-		for _, shell := range self.Embeds {
-			canonicalString += ":" + GetCanonicalMapString(shell["meta"].(map[string]interface{}))
+		for _, seed := range self.Embeds {
+			canonicalString += ":" + GetCanonicalMapString(seed["meta"].(map[string]interface{}))
 		}
 		canonicalString = strings.Trim(canonicalString, ":")
 		break
@@ -281,7 +282,7 @@ func(self *Shell) Verify(blockName, issuerPublicKey string) error {
 		return errors.New("block name "+blockName+" is unknown")
 	}
 
-	signer, err := ParsePublicKey([]byte(issuerPublicKey))
+	signer, err := crypto.ParsePublicKey([]byte(issuerPublicKey))
 	if err != nil {
 		return errors.New(fmt.Sprintf("Public Key Error: %v", err))
 	}
@@ -294,20 +295,20 @@ func(self *Shell) Verify(blockName, issuerPublicKey string) error {
 	return signer.Verify([]byte(canonicalString), self.Signatures[blockName].(string))
 }  
 
-// checks if a shell object current state can
-// pass as a valid shell
-func(self *Shell) IsValid() error {
+// checks if a seed object current state can
+// pass as a valid seed
+func(self *Seed) IsValid() error {
 	return Validate(self.JSON())
 }
 
-// return shell as raw JSON string
-func(self *Shell) JSON() string {
+// return seed as raw JSON string
+func(self *Seed) JSON() string {
 	bs, _ := json.Marshal(&self)
 	return string(bs)
 }
 
-// returns a map representation of the shell
-func(self *Shell) ToMap() map[string]interface{} {
+// returns a map representation of the seed
+func(self *Seed) ToMap() map[string]interface{} {
 	jsonStr := self.JSON()
 	var dat map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &dat); err != nil {
@@ -316,33 +317,33 @@ func(self *Shell) ToMap() map[string]interface{} {
     return dat
 }
 
-// return shell as a base64 json encoded string
-func(self *Shell) Encode() string {
+// return seed as a base64 json encoded string
+func(self *Seed) Encode() string {
 	jsonStr := self.JSON()
-	return ToBase64([]byte(jsonStr))
+	return crypto.ToBase64([]byte(jsonStr))
 }
 
-// clone a shell
-func(self *Shell) Clone() *Shell {
+// clone a seed
+func(self *Seed) Clone() *Seed {
 	jsonStr := self.JSON()
-	shell, err := LoadJSON(jsonStr)
+	seed, err := LoadJSON(jsonStr)
 	if err != nil {
 		panic(err)
 	}
-	return shell
+	return seed
 }
 
 // checks if the ownership block contains any property
-func(self *Shell) HasOwnership() bool {
+func(self *Seed) HasOwnership() bool {
 	return len(self.Ownership) > 0
 }
 
 // checks if the attributes block contains any property
-func(self *Shell) HasAttributes() bool {
+func(self *Seed) HasAttributes() bool {
 	return len(self.Attributes) > 0
 }
 
 // checks if the embeds block contains any property
-func(self *Shell) HasEmbeds() bool {
+func(self *Seed) HasEmbeds() bool {
 	return len(self.Embeds) > 0
 }

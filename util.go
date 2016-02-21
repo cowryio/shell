@@ -1,10 +1,10 @@
 // Contains convenience functions
-package shell
+package seed
 
 import (
 	"crypto/sha1"
 	"fmt"
-	"github.com/cowryio/shell/Godeps/_workspace/src/github.com/nu7hatch/gouuid"
+	"github.com/nu7hatch/gouuid"
 	"math/rand"
 	"os"
 	"sort"
@@ -37,7 +37,7 @@ func RandNum(min, max int) int {
 	return r1.Intn(max-min) + min
 }
 
-// Generate an id to be used as a shell id.
+// Generate an id to be used as a seed id.
 func NewID() string {
 	curTime := int(time.Now().Unix())
 	u4, err := uuid.NewV4()
