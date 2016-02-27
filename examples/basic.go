@@ -1,54 +1,96 @@
 package main 
 
 import (
-	shell "../"
+	seed "../"
 	"time"
 )
 
-const TXT = `
+var TXT = `
 {
    "signatures": {
-      "meta": "abcde"
+      "meta": "abcde",
+      "ownership": "aa",
+      "attributes": "abcde"
    },
    "meta":{
-      "created_at":1453975575,
-      "genesis":true,
-      "shell_id":"4417781906fb0a89c295959b0df01782dbc4dc9f",
-      "shell_type":"currency"
+      "created_at":`+seed.IntToString(time.Now().Unix())+`,
+      "seed_id": "`+seed.NewID()+`",
+      "seed_type":"currency"
    },
-   "ownership":null,
+   "ownership": {
+      "type": "sole",
+      "sole": {
+      	  "address_id": "56c1f3d1f68daa4584000001"
+      }
+   },
    "embeds": [],
-   "attributes":null
+   "attributes": {
+      "stuff": "stuff"
+   }
 }
 `
 
 func main() {
 
-	var issuerPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\nMIICWwIBAAKBgQCroZieOAo9stcf6R6eWfo51VCvK8cLdNS577m/HIFOmEd1CDi/\nu7agGzpehNAhHpr5NVjQZ4Te+KMRn9SnpUK2hc8dUU25PQolsOEwePVQ18hHNK4Y\n2JvOY/f8KCO2hhrS6uuP6eedpnSdulS1OXHTL6ZxQmBd9F33gLT6BERHQwIDAQAB\nAoGAEZ/0ljrXAmL9KG++DzDaO1omgPaT6B9FQRrXDkMVHEcS/3eqrDXQmTxykAY/\ngUctTu4lgrE+uc76n/Kz2ctkwEKIKet56ylqp+wlEUt1G+udoi07tgd7XyxzoUJm\nZwSm89gKh+mEPxni0FrBNg6dR0n2gvKRecnXqyoGVOHZITECQQDXgRJyrzgc/JhB\nSOBznEjtXAZXRRu3o9UznztjU9Xz7NWXTVuHu8WqYmGWCOqnysMhXJ3xBddJyDTF\njuOJ0123AkEAy+H+3POcT2FDOuluqPmAZQAUU6Nxtbj02/JJtOy7jq5jnN27HVC3\nuQzmfsS5J2XeQQodOUwOy2Ub57/OMrMi1QJAGZsZgQz2wuL0iFVLbhE0zRcxHa91\ncqWB0Kdr3Ap7EoeifV7QsFkMTIlyBOy8TQGXm+AwWBIUmYyzUIIA4UB/EwJAO+Bo\nSB2nZ0yqQO/zVt7HjWIDljinGXZzOvEiImdwAcxHZvdbj5V4D3mxa8N8mQx6xGEj\nCgPDSIquMlaLSSqA7QJAAbQPa0frCkm1rkWWZ7QwGm7ptzOACwFEGefm/1mhmw3a\nvoWRTHhrDuEbeVH3iF8MWhLJLPFtuSShiQMsrVbXPA==\n-----END RSA PRIVATE KEY-----"
+	// var sh = "eyJzaWduYXR1cmVzIjp7Im1ldGEiOiIzZjdhMTEyYjc5N2E1NzI0NzgyYTc1N2FkOTM5OWE4MDBhMTY4YTM4ZDA4ZjY2MGQxZTdjMzVhMWY3NTFkZDZiNzlmMzAzNTdhZDY1Y2NhN2JmMWQ3YjEwNmNiNzI0MGE3ZWIwMzZkYTM4ZTNkZjRkZWJlOGI4ZTk3YWQ4MmNjOTVhZjhkNmU5MTliNzk5NWY4NGE2NWYyMGI2YmQ1NzYyZDQyMjFhNzM0ZjY3MzA3YWI0ZWE2YTg0OTExZGFiNGM1ZGY0NmY2YWEzZTI1MzFiNmFiZjViMWRlZTU3MjIzM2FjNTFkOWUxYmVmY2VkM2MxNmQ1YTczYzM2NmMxZmJkIn0sIm1ldGEiOnsiY3JlYXRlZF9hdCI6MTQ1NTc5OTY3OSwic2hlbGxfaWQiOiJkMjVmMGQzZGE5ZDYwY2I1YWVjZDVkNTg4YzM5YjM0NzYxNzJhMWZiIiwic2hlbGxfdHlwZSI6ImN1cnJlbmN5In0sIm93bmVyc2hpcCI6e30sImVtYmVkcyI6W10sImF0dHJpYnV0ZXMiOnt9fQ=="
+	// var issuerPublicKey = "-----BEGIN RSA PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC1CCgxMS5rro13G4frgt88bq00\ncdWj8r/VK3uUi7CK7Dq8dmbUU5SfqeuCzEg0EUIcaiSabndev5CfUVTPLKakmelA\nv7f8F0c3hTTaInZcZ9F9xuWdfklKVlU63fSEl14+qGddRyu/vs3wYHUgesZZG16R\nZcNmRfDqMd3XYkEz8QIDAQAB\n-----END RSA PUBLIC KEY-----\n"
+	var issuerPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\nMIICXgIBAAKBgQC1CCgxMS5rro13G4frgt88bq00cdWj8r/VK3uUi7CK7Dq8dmbU\nU5SfqeuCzEg0EUIcaiSabndev5CfUVTPLKakmelAv7f8F0c3hTTaInZcZ9F9xuWd\nfklKVlU63fSEl14+qGddRyu/vs3wYHUgesZZG16RZcNmRfDqMd3XYkEz8QIDAQAB\nAoGBAKSWhfQzgsDkMjnYDftRQSTwewjzdglY6pAkuHaViizEGaK/Az6Hvthq5HRG\nxl6QUksDNcQyKtU51YMDrtetANOdmL2w2SXrK2sRFLqj2zB5eqn+GW87+HN5tIYi\n4FAr4/2k6oSI9yFxQ6R+pusYTMzaZdeMYvMwu0P6W6Lbb4sBAkEA57QYjqQ0nU2L\n8/5sq7GtjzFLJ8HoD7F2keLaLWh0EH0xNPTkjykdD+cFuJbSgdzbQv8q8zh3EU5i\nWUfljoJ6/wJBAMgD0c8WtMJ+Yv1HJo1/TWq55I9zh/gvIjG22MCa+AB31ZfYlV6p\now9CHT2uAUIW+j1YT68PeShWIvm4vZ7fAQ8CQQCoN5xMkvKP8ajV77U9wbVb7FG/\n/4tXOWP37lav+NGq1vlOlS0KsrKixPrmVLloBsw5C8BG7IulSN8mKoiCukBJAkBv\nXLkPbVv9QjNJQ7kyZSOsfY3FVRTqWQvX1C9ApcfZMt9oqP0ZdKfGEhCHy/8FVhfD\n2gybsqjJjZPxqCtjblR/AkEA3jD4MNRulqbu+U28Nt0Vxx8kbpEyfSm68WqkoEqn\nu/ILWzlYzTyqoZ/b5e0igHwzHP2Ex9GV49+ROI/+z2uA/A==\n-----END RSA PRIVATE KEY-----\n"
+	// var hostPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\nMIICXwIBAAKBgQC8RC0TxSEfuFAsdmV36J/izIUrYhbVl62GGDoBMWsiCuGdsAlb\nTG0hh3I/7blk2q1Kc2P08hTtK7dEkaQIgHZvljPJ7kZ92SHElHsIIqFFEV3S+kyH\nGvbv0Qn6Nu8ghDjEi2gK4ZwDyvMzLzgdfP+u3OCEg7KihOzKRLRwR1trJwIDAQAB\nAoGBAKHHA+VFNB2JyHsskizj3OCLVrPc6jpIyHe+QbncuW7bYtyZ9LBbkDuLpIWC\nxhkAQIEFfxNxIsJbGnT1obsciKgH5gGAR02fR1B4j77SDlWebXqEPCv2JHB640OB\nORf0BgbQqUj+46jS24uPdmofgcyXp3BA8o054ccH+xLEdlohAkEA792PENfejkEM\nyX+wWQhKhTNPCU9/o53HAYR5CVjdBsa/OvVVcXLuhmxGlrYhCBjA3Axh/ahS3BGi\nkJLDBRM1UwJBAMjuFsLYQekVtGSqGoU5TPfVFjwggOaSkduGBWKf1z2rEQMPcIqh\n0fqOdY4wX4cV5W6w3CvgK8hH8MO0dOANRF0CQQCZ2v6qahzaGEWQdfPyl8vc9pVK\nvpB7rXd5tLRCV5qmfxMoSTc+Jt9yn78Dat1zKRWDz/mGz9IeUL16iHjJJ5H7AkEA\norwqlR5/q18X3pvipNn225aqzoHoxFYbafeO7wTUWC7vtVHQ7YcIQO0WitXk2MzE\nKLV3bNW/wBN8DZVfP4OfRQJBAKWzrB32yKFUvOdCjQNfn7xidxSFadmyLIYntEkf\n3Z4ZA1usDwIPWhmfnJBlHnw3QmFoHg1p2D7ve4DPXDrKnoM=\n-----END RSA PRIVATE KEY-----\n"
 	var meta = map[string]interface{}{
-		"shell_id": shell.NewID(),
-		"shell_type": "currency",
+		"seed_id": seed.NewID(),
+		"seed_type": "currency",
 		"created_at": time.Now().Unix(),
 	}
 
-	aShell, err := shell.Create(meta, issuerPrivateKey)
-	// anoShell, err := shell.LoadJSON(TXT)
-	// shell.Println(anoShell, err)
+	sh, e := seed.Create(meta, issuerPrivateKey)
+	seed.Println("CREATE: ", e)
+	seed.Println(sh.Encode())
+	// sh2, _ := seed.Load(sh.Encode())
+	// seed.Println(sh2.Encode())
+	// seed.Println("VERIFY: ", sh2.Verify("meta", pubKey))
 
-	shell.Println(aShell.JSON(), err)
-
-
-
-	// manager := shell.Manager{}
-	// aShell := manager.NewShell("currency");
-	// aShell.AddTransaction(shell.GenesisTxn(1000));
-	// fmt.Printf("%v\n", currencyShell)
-	// shell.Println(aShell.JSON())
-	// anoShell, err := shell.LoadJSON(TXT)
+	// sh, e := seed.Load(TXT)
+	// seed.Println("LOAD:", e)
+	// sig, err := sh.Sign("meta", issuerPrivateKey)
 	// if err != nil {
-	// 	shell.Println(err)
+	// 	seed.Println("SIGN META:", err)
 	// 	return
 	// }
-	// shell.Println(anoShell.Embeds[1].Embeds[0].Txns)
+
+	// sh.Signatures["meta"] = sig
+
+	// sig, err = sh.Sign("ownership", hostPrivateKey)
+	// if err != nil {
+	// 	seed.Println("SIGN OWNERSHIP:", err)
+	// 	return
+	// }
+	// sh.Signatures["ownership"] = sig
+	
+	// sig, err = sh.Sign("attributes", issuerPrivateKey)
+	// if err != nil {
+	// 	seed.Println("SIGN ATTRIBUTES:", err)
+	// 	return
+	// }
+	// sh.Signatures["attributes"] = sig
+
+	// sh2, _ := seed.Load(TXT)
+	// sig, _ = sh.Sign("meta", issuerPrivateKey)
+	// sh2.Signatures["meta"] = sig
+	// sh.AddEmbed(sh2, issuerPrivateKey)
+
+	// seed.Println("VERIFY: ", sh.Verify("meta", issuerPublicKey))
+	// seed.Println("\n", sh.Encode())
+
+	// manager := seed.Manager{}
+	// aSeed := manager.NewSeed("currency");
+	// aSeed.AddTransaction(seed.GenesisTxn(1000));
+	// fmt.Printf("%v\n", currencySeed)
+	// seed.Println(aSeed.JSON())
+	// anoSeed, err := seed.LoadJSON(TXT)
+	// if err != nil {
+	// 	seed.Println(err)
+	// 	return
+	// }
+	// seed.Println(anoSeed.Embeds[1].Embeds[0].Txns)
 }
 

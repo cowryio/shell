@@ -1,7 +1,7 @@
 package seed
 
 import "testing"
-import "github.com/ellcrys/seed/Godeps/_workspace/src/github.com/stretchr/testify/assert"
+import "github.com/stretchr/testify/assert"
 
 // TestInvalidJSON tests that an invalid json string returns an error
 func TestInvalidJSON(t *testing.T) {
