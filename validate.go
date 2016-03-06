@@ -1,5 +1,5 @@
-// Contains validation method for seed
-package seed
+// Contains validation method for stone
+package stone
 
 import "errors"
 import "encoding/json"
@@ -7,14 +7,14 @@ import "fmt"
 import "time"
 
 // Validate `meta` block
-// * A valid meta block must contain seed_id, seed_type and created_at properties
-// * seed_id must be string and 40 characters in length
-// * seed_type must be string
+// * A valid meta block must contain stone_id, stone_type and created_at properties
+// * stone_id must be string and 40 characters in length
+// * stone_type must be string
 // * created_at must be a valid unix date in the past but not beyond a start/launch time
 func ValidateMetaBlock(meta map[string]interface{}) error {
 
 	// must reject unexpected properties
-	accetableProps := []string{ "seed_id", "seed_type", "created_at" } 
+	accetableProps := []string{ "stone_id", "stone_type", "created_at" } 
 	for prop, _ := range meta {
 		if !InStringSlice(accetableProps, prop) {
 			return errors.New(fmt.Sprintf("`%s` property is unexpected in `meta` block", prop))
@@ -22,25 +22,25 @@ func ValidateMetaBlock(meta map[string]interface{}) error {
 	}
 
 	// must have expected properties
-	props := []string{"seed_id", "seed_type", "created_at"}
+	props := []string{"stone_id", "stone_type", "created_at"}
 	for _, prop := range props {
 		if !HasKey(meta, prop) {
 			return errors.New(fmt.Sprintf("`meta` block is missing `%s` property", prop))
 		} 
 	}
 
-	// seed id must be a string and should be 40 characters in length
-	if !IsStringValue(meta["seed_id"]) {
-		return errors.New("`meta.seed_id` value type is invalid. Expects string value")
+	// stone id must be a string and should be 40 characters in length
+	if !IsStringValue(meta["stone_id"]) {
+		return errors.New("`meta.stone_id` value type is invalid. Expects string value")
 	} else {
-		if len(meta["seed_id"].(string)) != 40 {
-			return errors.New("`meta.seed_id` must have 40 characters. Preferrable a UUIDv4 SHA1 hashed string")
+		if len(meta["stone_id"].(string)) != 40 {
+			return errors.New("`meta.stone_id` must have 40 characters. Preferrable a UUIDv4 SHA1 hashed string")
 		}
 	}
 
-	// seed_type must be string
-	if !IsStringValue(meta["seed_type"]) {
-		return errors.New("`meta.seed_type` value type is invalid. Expects string value")
+	// stone_type must be string
+	if !IsStringValue(meta["stone_type"]) {
+		return errors.New("`meta.stone_type` value type is invalid. Expects string value")
 	}
 
 	// created_at should be a number
@@ -174,14 +174,14 @@ func ValidateOwnershipBlock(ownership map[string]interface{}) error {
 	return nil
 }
 
-// Validate a seed. This function ensures 
-// the existence of mandatory seed properties and attributes.
+// Validate a stone. This function ensures 
+// the existence of mandatory stone properties and attributes.
 // TODO: if ownership block exists, signatures block must have ownership property
-func Validate(seedData interface{}) error {
+func Validate(stoneData interface{}) error {
 
-	// parse seed data to map[string]interface{} seedData is string
+	// parse stone data to map[string]interface{} stoneData is string
 	var data map[string]interface{}
-	switch d := seedData.(type) {
+	switch d := stoneData.(type) {
 	case string:
 		if err := json.Unmarshal([]byte(d), &data); err != nil {
 	        return errors.New("unable to parse json string");
@@ -191,7 +191,7 @@ func Validate(seedData interface{}) error {
 		data = d
 		break
 	default:
-		errors.New("unsupported seed data type. Requires seed data in JSON string or golang map[string]interface{}");
+		errors.New("unsupported stone data type. Requires stone data in JSON string or golang map[string]interface{}");
 	}
 
     // must have `meta` block
@@ -274,27 +274,27 @@ func Validate(seedData interface{}) error {
 			return errors.New("missing `embeds` property in `signatures` block")
 		}
 
-		// validate each seeds in the embeds block. Prevent validaton of the individual seeds' embeds
+		// validate each stones in the embeds block. Prevent validaton of the individual stones' embeds
 		// by empting their `embeds` block before calling Validate() on them. Reassign their `embeds` block
 		// back after validation.
 		for i, embed := range embeds {
 			
 			var embedsClone []interface{}
-			seed := embed.(map[string]interface{})
+			stone := embed.(map[string]interface{})
 			
-			// Ensure the seed has an `embed` block and the value type is a slice.
-			// Then temporary remove embeds property in the seed as we aren't interested in validating deeper levels
-			if seed["embeds"] != nil && IsSlice(seed["embeds"].([]interface{}))  {
-				embedsClone = CloneSliceOfInterface(seed["embeds"].([]interface{}))
-				seed["embeds"] = []interface{}{}
+			// Ensure the stone has an `embed` block and the value type is a slice.
+			// Then temporary remove embeds property in the stone as we aren't interested in validating deeper levels
+			if stone["embeds"] != nil && IsSlice(stone["embeds"].([]interface{}))  {
+				embedsClone = CloneSliceOfInterface(stone["embeds"].([]interface{}))
+				stone["embeds"] = []interface{}{}
 			}
 
-			if err := Validate(seed); err != nil {
+			if err := Validate(stone); err != nil {
 				return errors.New(fmt.Sprintf("unable to validate embed at index %d. Reason: %s", i, err.Error()))
 			}
 
-			// reassign seed's embeds
-			seed["embeds"] = embedsClone
+			// reassign stone's embeds
+			stone["embeds"] = embedsClone
 		}
     }
 

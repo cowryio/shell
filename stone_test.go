@@ -1,4 +1,4 @@
-package seed
+package stone
 
 import (
 	"testing"
@@ -14,31 +14,31 @@ var sampleKeys = []string{
 }
 
 var TEST_SHELL_DATA = []string {
-	`{"signatures":{"meta":""},"meta":{"created_at":1453975575, "seed_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","seed_type":"currency"},"ownership":null,"embeds":[],"attributes":null}`,
-	`{"signatures":{"meta":"abcde","ownership":"abcde","attributes":"abcde","embeds":"abcde"},"meta":{"created_at": `+IntToString(time.Now().Unix())+`,"seed_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","seed_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[{"signatures":{"meta":"abcde","ownership":"abcde"},"meta":{"created_at":1454443443,"seed_id":"9417781906fb0a89c295959b0df01782dbc4dc9f","seed_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[{"signatures":{"meta":"abcde","ownership":"abcde"},"meta":{"created_at":1454443443,"seed_id":"514417781906fb0a89c295959b0df01782dbc4dc9f","seed_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[],"attributes":{}}],"attributes":{}}],"attributes":{"some_data":"some_value"}}`,
+	`{"signatures":{"meta":""},"meta":{"created_at":1453975575, "stone_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","stone_type":"currency"},"ownership":null,"embeds":[],"attributes":null}`,
+	`{"signatures":{"meta":"abcde","ownership":"abcde","attributes":"abcde","embeds":"abcde"},"meta":{"created_at": `+IntToString(time.Now().Unix())+`,"stone_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","stone_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[{"signatures":{"meta":"abcde","ownership":"abcde"},"meta":{"created_at":1454443443,"stone_id":"9417781906fb0a89c295959b0df01782dbc4dc9f","stone_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[{"signatures":{"meta":"abcde","ownership":"abcde"},"meta":{"created_at":1454443443,"stone_id":"514417781906fb0a89c295959b0df01782dbc4dc9f","stone_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[],"attributes":{}}],"attributes":{}}],"attributes":{"some_data":"some_value"}}`,
 }
 
 func NewValidSeed() *Seed {
 	var meta = map[string]interface{}{
-		"seed_id": NewID(),
-		"seed_type": "some_seed",
+		"stone_id": NewID(),
+		"stone_type": "some_stone",
 		"created_at": time.Now().Unix(),
 	}
 	sh, _ := Create(meta, sampleKeys[0])
 	return sh
 } 
 
-// TestCreateASeed create a valid, error free seed
+// TestCreateASeed create a valid, error free stone
 func TestCreateASeed(t *testing.T) {
-	seedID := NewID()
+	stoneID := NewID()
 	var meta = map[string]interface{}{
-		"seed_id": seedID,
-		"seed_type": "currency",
+		"stone_id": stoneID,
+		"stone_type": "currency",
 		"created_at": time.Now().Unix(),
 	}
 	sh, err := Create(meta, sampleKeys[0])
 	assert.Nil(t, err)
-	assert.Equal(t, sh.Meta["seed_id"], seedID)
+	assert.Equal(t, sh.Meta["stone_id"], stoneID)
 	assert.NotEmpty(t, sh.Signatures["meta"])
 }
 
@@ -46,16 +46,16 @@ func TestCreateASeed(t *testing.T) {
 func TestMustProvideMetaWithContent(t *testing.T) {
 	_, err := Create(make(map[string]interface{}), sampleKeys[0])
 	assert.NotNil(t, err)
-	assert.Equal(t, err.Error(), "`meta` block is missing `seed_id` property")
+	assert.Equal(t, err.Error(), "`meta` block is missing `stone_id` property")
 }
 
 // TestInvalidPrivateKey tests that an invalid private key returns an error
 func TestInvalidPrivateKey(t *testing.T) {
 	var issuerPrivateKey = sampleKeys[1]
-	seedID := NewID()
+	stoneID := NewID()
 	var meta = map[string]interface{}{
-		"seed_id": seedID,
-		"seed_type": "currency",
+		"stone_id": stoneID,
+		"stone_type": "currency",
 		"created_at": time.Now().Unix(),
 	}
 	_, err := Create(meta, issuerPrivateKey)
@@ -71,23 +71,23 @@ func TestCantLoadMalformedJSON(t *testing.T) {
 	assert.Equal(t, err.Error(), `unable to parse json string`)
 }
 
-// TestLoadJSON tests that a valid seed json string can be loaded into a seed object
+// TestLoadJSON tests that a valid stone json string can be loaded into a stone object
 func TestLoadJSON(t *testing.T) {
 	txt := TEST_SHELL_DATA[0]
-	seed, err := LoadJSON(txt)
+	stone, err := LoadJSON(txt)
 	assert.Nil(t, err);
-	assert.IsType(t, &Seed{}, seed)
+	assert.IsType(t, &Seed{}, stone)
 }
 
-// TestLoadEncodedJSON tests that a base 64 encoded json string can be loaded into a seed object
+// TestLoadEncodedJSON tests that a base 64 encoded json string can be loaded into a stone object
 func TestLoadEncodedJSON(t *testing.T) {
 	encodedJSON := crypto.ToBase64([]byte(TEST_SHELL_DATA[0]))
-	seed, err := Load(encodedJSON)
+	stone, err := Load(encodedJSON)
 	assert.Nil(t, err);
-	assert.IsType(t, &Seed{}, seed)
+	assert.IsType(t, &Seed{}, stone)
 }
 
-// TestCannotLoadInvalidEncodedJSON tests that an incorrect base64 encode will result in error when attempting to load into a seed
+// TestCannotLoadInvalidEncodedJSON tests that an incorrect base64 encode will result in error when attempting to load into a stone
 func TestCannotLoadInvalidEncodedJSON(t *testing.T) {
 	encodedJSON := crypto.ToBase64([]byte("abcde"))
 	_, err := Load(encodedJSON)
@@ -95,28 +95,28 @@ func TestCannotLoadInvalidEncodedJSON(t *testing.T) {
 	assert.Equal(t, err.Error(), "unable to parse json string")
 }
 
-// TestCorrectlySignMeta tests that a seed is correctly signed
+// TestCorrectlySignMeta tests that a stone is correctly signed
 func TestCorrectlySignMeta(t *testing.T) {
 	txt := TEST_SHELL_DATA[0]
-	seed, err := LoadJSON(txt)
+	stone, err := LoadJSON(txt)
 	assert.Nil(t, err);
-	expectedCanonicalMapString := GetCanonicalMapString(seed.Meta)
+	expectedCanonicalMapString := GetCanonicalMapString(stone.Meta)
 	signer, err := crypto.ParsePrivateKey([]byte(sampleKeys[0]))
 	assert.Nil(t, err)
 	expectedSignature, err := signer.Sign([]byte(expectedCanonicalMapString))
 	assert.Nil(t, err)
-	signature, err := seed.Sign("meta", sampleKeys[0])
+	signature, err := stone.Sign("meta", sampleKeys[0])
 	assert.Nil(t, err)
 	assert.Equal(t, expectedSignature, signature)
-	assert.Equal(t, expectedSignature, seed.Signatures["meta"])
+	assert.Equal(t, expectedSignature, stone.Signatures["meta"])
 }
 
 // TestCannotSignUnknownBlock tests that an error will occur when attempting to sign an unknown block
 func TestCannotSignUnknownBlock(t *testing.T) {
 	txt := TEST_SHELL_DATA[0]
-	seed, err := LoadJSON(txt)
+	stone, err := LoadJSON(txt)
 	assert.Nil(t, err)
-	_, err = seed.Sign("unknown_block", sampleKeys[0])
+	_, err = stone.Sign("unknown_block", sampleKeys[0])
 	assert.NotNil(t, err)
 	expectedMsg := "block unknown"
 	assert.Equal(t, err.Error(), expectedMsg)
@@ -124,16 +124,16 @@ func TestCannotSignUnknownBlock(t *testing.T) {
 
 // TestAddMeta tests that a `meta` block can be assigned and signed successful
 func TestAddMeta(t *testing.T) {
-	seedID := NewID()
+	stoneID := NewID()
 	var meta = map[string]interface{}{
-		"seed_id": seedID,
-		"seed_type": "currency",
+		"stone_id": stoneID,
+		"stone_type": "currency",
 		"created_at": time.Now().Unix(),
 	}
 	sh := Empty()
 	err := sh.AddMeta(meta, sampleKeys[0])
 	assert.Nil(t, err)
-	assert.Equal(t, sh.Meta["seed_id"], meta["seed_id"])
+	assert.Equal(t, sh.Meta["stone_id"], meta["stone_id"])
 	assert.NotNil(t, sh.Signatures["meta"])
 }
 
@@ -165,8 +165,8 @@ func TestAddAttributes(t *testing.T) {
 	assert.NotNil(t, sh.Signatures["attributes"])
 }
 
-// TestAddEmbed tests that a seed object can be embeded into 
-// another seed with no error and is also signed
+// TestAddEmbed tests that a stone object can be embeded into 
+// another stone with no error and is also signed
 func TestAddEmbed(t *testing.T) {
 	sh := NewValidSeed()
 	embed := NewValidSeed()
@@ -258,63 +258,63 @@ func TestCallVerifyWhenBlockSignatureInvalid(t *testing.T) {
 // TestVerifyMeta tests that a meta block signed with a private key is 
 // successfully verified using the corresponding public key
 func TestVerifyMeta(t *testing.T) {
-	seed, err := LoadJSON(TEST_SHELL_DATA[1]);
+	stone, err := LoadJSON(TEST_SHELL_DATA[1]);
 	assert.Nil(t, err)
-	seed.Sign("meta", sampleKeys[0])
-	err = seed.Verify("meta", sampleKeys[2])
+	stone.Sign("meta", sampleKeys[0])
+	err = stone.Verify("meta", sampleKeys[2])
 	assert.Nil(t, err)
 }
 
 // TestVerifyOwnership tests that an ownership block signed with a private key is 
 // successfully verified using the corresponding public key
 func TestVerifyOwnership(t *testing.T) {
-	seed, err := LoadJSON(TEST_SHELL_DATA[1]);
+	stone, err := LoadJSON(TEST_SHELL_DATA[1]);
 	assert.Nil(t, err)
-	seed.Sign("ownership", sampleKeys[0])
-	err = seed.Verify("ownership", sampleKeys[2])
+	stone.Sign("ownership", sampleKeys[0])
+	err = stone.Verify("ownership", sampleKeys[2])
 	assert.Nil(t, err)
 }
 
 // TestVerifyAttributes tests that an `attributes` block signed with a private key is 
 // successfully verified using the corresponding public key
 func TestVerifyAttributes(t *testing.T) {
-	seed, err := LoadJSON(TEST_SHELL_DATA[1]);
+	stone, err := LoadJSON(TEST_SHELL_DATA[1]);
 	assert.Nil(t, err)
-	seed.Sign("attributes", sampleKeys[0])
-	err = seed.Verify("attributes", sampleKeys[2])
+	stone.Sign("attributes", sampleKeys[0])
+	err = stone.Verify("attributes", sampleKeys[2])
 	assert.Nil(t, err)
 }
 
 // TestVerifyEmbeds tests that an `attributes` block signed with a private key is 
 // successfully verified using the corresponding public key
 func TestVerifyEmbeds(t *testing.T) {
-	seed, err := LoadJSON(TEST_SHELL_DATA[1]);
+	stone, err := LoadJSON(TEST_SHELL_DATA[1]);
 	assert.Nil(t, err)
-	seed.Sign("embeds", sampleKeys[0])
-	err = seed.Verify("embeds", sampleKeys[2])
+	stone.Sign("embeds", sampleKeys[0])
+	err = stone.Verify("embeds", sampleKeys[2])
 	assert.Nil(t, err)
 }
 
 // TestCloneSeed
 func TestCloneSeed(t *testing.T) {
-	seed, err := LoadJSON(TEST_SHELL_DATA[1]);
+	stone, err := LoadJSON(TEST_SHELL_DATA[1]);
 	assert.Nil(t, err)
-	clone := seed.Clone()
-	assert.Exactly(t, seed, clone) 
-	seed.Signatures["meta"] = "blah_blah"
-	assert.NotEmpty(t, seed.Signatures["meta"], clone.Signatures["meta"])
+	clone := stone.Clone()
+	assert.Exactly(t, stone, clone) 
+	stone.Signatures["meta"] = "blah_blah"
+	assert.NotEmpty(t, stone.Signatures["meta"], clone.Signatures["meta"])
 }
 
-// TestHasOwnershipFalse tests that a seed does not have any ownership information
+// TestHasOwnershipFalse tests that a stone does not have any ownership information
 func TestHasOwnershipFalse(t *testing.T) {
-	seed, err := LoadJSON(TEST_SHELL_DATA[0]);
+	stone, err := LoadJSON(TEST_SHELL_DATA[0]);
 	assert.Nil(t, err)
-	assert.Equal(t, seed.HasOwnership(), false)
+	assert.Equal(t, stone.HasOwnership(), false)
 }
 
-// TestHasOwnershipTrue tests that a seed has ownership information
+// TestHasOwnershipTrue tests that a stone has ownership information
 func TestHasOwnershipTrue(t *testing.T) {
-	seed, err := LoadJSON(TEST_SHELL_DATA[0]);
+	stone, err := LoadJSON(TEST_SHELL_DATA[0]);
 	assert.Nil(t, err)
 	var ownership = map[string]interface{}{
 		"type": "sole",
@@ -322,31 +322,31 @@ func TestHasOwnershipTrue(t *testing.T) {
 			"address_id": "abcde",
    		},
 	}
-	err = seed.AddOwnership(ownership, sampleKeys[0])
+	err = stone.AddOwnership(ownership, sampleKeys[0])
 	assert.Nil(t, err)
-	assert.Equal(t, seed.HasOwnership(), true)
+	assert.Equal(t, stone.HasOwnership(), true)
 }
 
-// TestHasAttributesTrue tests that a seed has attributes information
+// TestHasAttributesTrue tests that a stone has attributes information
 func TestHasAttributesTrue(t *testing.T) {
-	seed, err := LoadJSON(TEST_SHELL_DATA[0]);
+	stone, err := LoadJSON(TEST_SHELL_DATA[0]);
 	assert.Nil(t, err)
 	var attrs = map[string]interface{}{
 		"some_data": "some_value",
 	}
-	err = seed.AddAttributes(attrs, sampleKeys[0])
+	err = stone.AddAttributes(attrs, sampleKeys[0])
 	assert.Nil(t, err)
-	assert.Equal(t, seed.HasAttributes(), true)
+	assert.Equal(t, stone.HasAttributes(), true)
 }
 
-// TestHasAttributesFalse tests that a seed does not have attributes information
+// TestHasAttributesFalse tests that a stone does not have attributes information
 func TestHasAttributesFalse(t *testing.T) {
-	seed, err := LoadJSON(TEST_SHELL_DATA[0]);
+	stone, err := LoadJSON(TEST_SHELL_DATA[0]);
 	assert.Nil(t, err)
-	assert.Equal(t, seed.HasAttributes(), false)
+	assert.Equal(t, stone.HasAttributes(), false)
 }
 
-// TestHasEmbedsTrue tests that a seed has embeds information
+// TestHasEmbedsTrue tests that a stone has embeds information
 func TestHasEmbedsTrue(t *testing.T) {
 	sh := NewValidSeed()
 	embed := NewValidSeed()
@@ -355,7 +355,7 @@ func TestHasEmbedsTrue(t *testing.T) {
 	assert.Equal(t, sh.HasEmbeds(), true)
 }
 
-// TestHasEmbedsFalse tests that a seed has no embeds information
+// TestHasEmbedsFalse tests that a stone has no embeds information
 func TestHasEmbedsFalse(t *testing.T) {
 	sh := NewValidSeed()
 	assert.Equal(t, sh.HasEmbeds(), false)

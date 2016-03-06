@@ -1,5 +1,5 @@
 // Contains convenience functions
-package seed
+package stone
 
 import (
 	"crypto/sha1"
@@ -37,7 +37,7 @@ func RandNum(min, max int) int {
 	return r1.Intn(max-min) + min
 }
 
-// Generate an id to be used as a seed id.
+// Generate an id to be used as a stone id.
 func NewID() string {
 	curTime := int(time.Now().Unix())
 	u4, err := uuid.NewV4()
