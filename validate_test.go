@@ -24,8 +24,8 @@ func TestMetaBlockHasUnexpectedProperty(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestMetaMustHaveSeedIDProperty tests that a meta block data must have a `stone_id` property
-func TestMetaMustHaveSeedIDProperty(t *testing.T) {
+// TestMetaMustHaveStoneIDProperty tests that a meta block data must have a `stone_id` property
+func TestMetaMustHaveStoneIDProperty(t *testing.T) {
 	var d = make(map[string]interface{})
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
@@ -33,8 +33,8 @@ func TestMetaMustHaveSeedIDProperty(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestMetaMustHaveSeedTypeProperty tests that stone_type property is set
-func TestMetaMustHaveSeedTypeProperty(t *testing.T) {
+// TestMetaMustHaveStoneTypeProperty tests that stone_type property is set
+func TestMetaMustHaveStoneTypeProperty(t *testing.T) {
 	d := map[string]interface{}{
 		"stone_id": 1234,
 	}
@@ -56,8 +56,8 @@ func TestMetaMustHaveCreatedAtProperty(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestSeedIDNotString tests that stone_id value type must be string
-func TestSeedIDMustString(t *testing.T) {
+// TestStoneIDNotString tests that stone_id value type must be string
+func TestStoneIDMustString(t *testing.T) {
 	d := map[string]interface{}{
 		"stone_id":   1234,
 		"stone_type": "coupon",
@@ -69,8 +69,8 @@ func TestSeedIDMustString(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestSeedIDLengthInvalid tests that a stone_id must have 40 characters
-func TestSeedIDLengthInvalid(t *testing.T) {
+// TestStoneIDLengthInvalid tests that a stone_id must have 40 characters
+func TestStoneIDLengthInvalid(t *testing.T) {
 	d := map[string]interface{}{
 		"stone_id":   "abcd",
 		"stone_type": "coupon",
@@ -82,8 +82,8 @@ func TestSeedIDLengthInvalid(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestSeedTypeMustBeString tests that stone_type value type must be string
-func TestSeedTypeMustBeString(t *testing.T) {
+// TestStoneTypeMustBeString tests that stone_type value type must be string
+func TestStoneTypeMustBeString(t *testing.T) {
 	d := map[string]interface{}{
 		"stone_id":   Sha1("abcd"),
 		"stone_type": 123,
@@ -508,9 +508,9 @@ func TestNoErrorEmptyEmbedsBlock(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-// TestEmbedsBlockWithInvalidSeed tests that an error will occur when the `embeds` block contains
+// TestEmbedsBlockWithInvalidStone tests that an error will occur when the `embeds` block contains
 // an invalid stone 
-func TestEmbedsBlockWithInvalidSeed(t *testing.T) {
+func TestEmbedsBlockWithInvalidStone(t *testing.T) {
 	var str = `{ 
 		"signatures": { 
 			"meta": "abcde",

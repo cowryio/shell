@@ -82,15 +82,15 @@ func main() {
 	// stone.Println("\n", sh.Encode())
 
 	// manager := stone.Manager{}
-	// aSeed := manager.NewSeed("currency");
-	// aSeed.AddTransaction(stone.GenesisTxn(1000));
-	// fmt.Printf("%v\n", currencySeed)
-	// stone.Println(aSeed.JSON())
-	// anoSeed, err := stone.LoadJSON(TXT)
+	// aStone := manager.NewStone("currency");
+	// aStone.AddTransaction(stone.GenesisTxn(1000));
+	// fmt.Printf("%v\n", currencyStone)
+	// stone.Println(aStone.JSON())
+	// anoStone, err := stone.LoadJSON(TXT)
 	// if err != nil {
 	// 	stone.Println(err)
 	// 	return
 	// }
-	// stone.Println(anoSeed.Embeds[1].Embeds[0].Txns)
+	// stone.Println(anoStone.Embeds[1].Embeds[0].Txns)
 }
 

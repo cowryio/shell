@@ -18,7 +18,7 @@ var TEST_SHELL_DATA = []string {
 	`{"signatures":{"meta":"abcde","ownership":"abcde","attributes":"abcde","embeds":"abcde"},"meta":{"created_at": `+IntToString(time.Now().Unix())+`,"stone_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","stone_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[{"signatures":{"meta":"abcde","ownership":"abcde"},"meta":{"created_at":1454443443,"stone_id":"9417781906fb0a89c295959b0df01782dbc4dc9f","stone_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[{"signatures":{"meta":"abcde","ownership":"abcde"},"meta":{"created_at":1454443443,"stone_id":"514417781906fb0a89c295959b0df01782dbc4dc9f","stone_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[],"attributes":{}}],"attributes":{}}],"attributes":{"some_data":"some_value"}}`,
 }
 
-func NewValidSeed() *Seed {
+func NewValidStone() *Stone {
 	var meta = map[string]interface{}{
 		"stone_id": NewID(),
 		"stone_type": "some_stone",
@@ -28,8 +28,8 @@ func NewValidSeed() *Seed {
 	return sh
 } 
 
-// TestCreateASeed create a valid, error free stone
-func TestCreateASeed(t *testing.T) {
+// TestCreateAStone create a valid, error free stone
+func TestCreateAStone(t *testing.T) {
 	stoneID := NewID()
 	var meta = map[string]interface{}{
 		"stone_id": stoneID,
@@ -76,7 +76,7 @@ func TestLoadJSON(t *testing.T) {
 	txt := TEST_SHELL_DATA[0]
 	stone, err := LoadJSON(txt)
 	assert.Nil(t, err);
-	assert.IsType(t, &Seed{}, stone)
+	assert.IsType(t, &Stone{}, stone)
 }
 
 // TestLoadEncodedJSON tests that a base 64 encoded json string can be loaded into a stone object
@@ -84,7 +84,7 @@ func TestLoadEncodedJSON(t *testing.T) {
 	encodedJSON := crypto.ToBase64([]byte(TEST_SHELL_DATA[0]))
 	stone, err := Load(encodedJSON)
 	assert.Nil(t, err);
-	assert.IsType(t, &Seed{}, stone)
+	assert.IsType(t, &Stone{}, stone)
 }
 
 // TestCannotLoadInvalidEncodedJSON tests that an incorrect base64 encode will result in error when attempting to load into a stone
@@ -168,8 +168,8 @@ func TestAddAttributes(t *testing.T) {
 // TestAddEmbed tests that a stone object can be embeded into 
 // another stone with no error and is also signed
 func TestAddEmbed(t *testing.T) {
-	sh := NewValidSeed()
-	embed := NewValidSeed()
+	sh := NewValidStone()
+	embed := NewValidStone()
 	sh.AddEmbed(embed, sampleKeys[0])
 	expectedSignature, err := sh.Sign("embeds", sampleKeys[0])
 	assert.Nil(t, err)
@@ -295,8 +295,8 @@ func TestVerifyEmbeds(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-// TestCloneSeed
-func TestCloneSeed(t *testing.T) {
+// TestCloneStone
+func TestCloneStone(t *testing.T) {
 	stone, err := LoadJSON(TEST_SHELL_DATA[1]);
 	assert.Nil(t, err)
 	clone := stone.Clone()
@@ -348,8 +348,8 @@ func TestHasAttributesFalse(t *testing.T) {
 
 // TestHasEmbedsTrue tests that a stone has embeds information
 func TestHasEmbedsTrue(t *testing.T) {
-	sh := NewValidSeed()
-	embed := NewValidSeed()
+	sh := NewValidStone()
+	embed := NewValidStone()
 	err := sh.AddEmbed(embed, sampleKeys[0])
 	assert.Nil(t, err)
 	assert.Equal(t, sh.HasEmbeds(), true)
@@ -357,6 +357,6 @@ func TestHasEmbedsTrue(t *testing.T) {
 
 // TestHasEmbedsFalse tests that a stone has no embeds information
 func TestHasEmbedsFalse(t *testing.T) {
-	sh := NewValidSeed()
+	sh := NewValidStone()
 	assert.Equal(t, sh.HasEmbeds(), false)
 }

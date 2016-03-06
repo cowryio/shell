@@ -10,7 +10,7 @@ import (
 	"github.com/ellcrys/crypto"
 )
 
-type Seed struct {
+type Stone struct {
 	Signatures map[string]interface{} 		`json:"signatures"`
 	Meta map[string]interface{}				`json:"meta"`
 	Ownership map[string]interface{} 		`json:"ownership"`
@@ -19,7 +19,7 @@ type Seed struct {
 }
 
 // Initialize a stone
-func initialize(stone *Seed) *Seed {
+func initialize(stone *Stone) *Stone {
 	stone.Signatures = make(map[string]interface{})
 	stone.Meta = make(map[string]interface{})
 	stone.Ownership = make(map[string]interface{})
@@ -29,19 +29,19 @@ func initialize(stone *Seed) *Seed {
 }
 
 // creates an stone instances and initializes it
-func Empty() *Seed {
-	sh := &Seed{}
+func Empty() *Stone {
+	sh := &Stone{}
 	return initialize(sh)
 }
 
 // Create a stone.The new stone is immediately signed using the issuer's private key
-func Create(meta map[string]interface{}, issuerPrivateKey string) (*Seed, error) {
+func Create(meta map[string]interface{}, issuerPrivateKey string) (*Stone, error) {
 
-	stone := initialize(&Seed{})
+	stone := initialize(&Stone{})
 
 	// validate meta
 	if err := ValidateMetaBlock(meta); err != nil {
-    	return &Seed{}, err
+    	return &Stone{}, err
     } else {
 		meta["created_at"] = IntToFloat64(meta["created_at"])
     }
@@ -50,7 +50,7 @@ func Create(meta map[string]interface{}, issuerPrivateKey string) (*Seed, error)
 	stone.Meta = meta
 	_, err := stone.Sign("meta", issuerPrivateKey)
 	if err != nil {
-		return &Seed{}, err
+		return &Stone{}, err
 	}
 
 	return stone, nil
@@ -59,9 +59,9 @@ func Create(meta map[string]interface{}, issuerPrivateKey string) (*Seed, error)
 // Creates a stone from a map. Validation of expected field is 
 // not performed. Use Validate() before calling this method if validation
 // is necessary
-func loadMap(data map[string]interface{}) (*Seed, error) {
+func loadMap(data map[string]interface{}) (*Stone, error) {
 
-	var stone = &Seed{}
+	var stone = &Stone{}
 
 	// add signatures
     if signatures := data["signatures"]; signatures != nil {
@@ -97,19 +97,19 @@ func loadMap(data map[string]interface{}) (*Seed, error) {
 // attempt to sign the blocks. 
 // If the string passed in starts with "{", it is considered a JSON string, otherwise, it assumes string is base 64 encoded and
 // will attempt to decoded it. 
-func Load(stoneStr string) (*Seed, error) {
+func Load(stoneStr string) (*Stone, error) {
 	stoneStr = strings.TrimSpace(stoneStr)
 	if stoneStr == "" {
-		return &Seed{}, errors.New("Cannot load empty stone string")
+		return &Stone{}, errors.New("Cannot load empty stone string")
 	} else {
 		if fmt.Sprintf("%c", stoneStr[0]) == "{" {					// json string
 			return LoadJSON(stoneStr)
 		} else {
-			decodedSeedStr, err := crypto.FromBase64(stoneStr)
+			decodedStoneStr, err := crypto.FromBase64(stoneStr)
 			if err != nil {
-				return &Seed{}, errors.New("unable to decode encoded stone string")
+				return &Stone{}, errors.New("unable to decode encoded stone string")
 			}
-			return LoadJSON(decodedSeedStr)
+			return LoadJSON(decodedStoneStr)
 		}
 	}
 }
@@ -117,13 +117,13 @@ func Load(stoneStr string) (*Seed, error) {
 
 // Create a stone from a json string by converting
 // it to a map and then used to load a new stone instance
-func LoadJSON(jsonStr string) (*Seed, error) {
+func LoadJSON(jsonStr string) (*Stone, error) {
 	data, err := JSONToMap(jsonStr)
 	if err != nil{
-        return &Seed{}, err;
+        return &Stone{}, err;
     }
     if err := Validate(data); err != nil {
-    	return &Seed{}, err
+    	return &Stone{}, err
     }
 	return loadMap(data)  
 }
@@ -142,7 +142,7 @@ func JSONToMap(jsonStr string) (map[string]interface{}, error) {
 // Sign any stone block by creating a canonical string representation
 // of the block value and signing with the issuer's private key. The computed signature
 // is store the `signatures` block
-func(self *Seed) Sign(blockName string, privateKey string) (string, error) {
+func(self *Stone) Sign(blockName string, privateKey string) (string, error) {
 	
 	var canonicalString string
 
@@ -181,7 +181,7 @@ func(self *Seed) Sign(blockName string, privateKey string) (string, error) {
 }
 
 // Assign and sign a valid meta value to the meta block
-func(self *Seed) AddMeta(meta map[string]interface{}, issuerPrivateKey string) error {
+func(self *Stone) AddMeta(meta map[string]interface{}, issuerPrivateKey string) error {
 
 	// validate meta
 	if err := ValidateMetaBlock(meta); err != nil {
@@ -200,7 +200,7 @@ func(self *Seed) AddMeta(meta map[string]interface{}, issuerPrivateKey string) e
 }
 
 // Assign and sign a valid ownership data to the ownership block
-func (self *Seed) AddOwnership(ownership map[string]interface{}, issuerPrivateKey string) error {
+func (self *Stone) AddOwnership(ownership map[string]interface{}, issuerPrivateKey string) error {
 
 	// validate 
 	if err := ValidateOwnershipBlock(ownership); err != nil {
@@ -219,7 +219,7 @@ func (self *Seed) AddOwnership(ownership map[string]interface{}, issuerPrivateKe
 }
 
 // Assign a attribute data to the attributes bloc
-func (self *Seed) AddAttributes(attributes map[string]interface{}, issuerPrivateKey string) error {
+func (self *Stone) AddAttributes(attributes map[string]interface{}, issuerPrivateKey string) error {
 	
 	self.Attributes = attributes
 
@@ -233,7 +233,7 @@ func (self *Seed) AddAttributes(attributes map[string]interface{}, issuerPrivate
 }
 
 // add a stone to the `embeds` block
-func (self *Seed) AddEmbed(stone *Seed, issuerPrivateKey string) error {
+func (self *Stone) AddEmbed(stone *Stone, issuerPrivateKey string) error {
 
 	self.Embeds = append(self.Embeds, stone.ToMap())
 
@@ -248,7 +248,7 @@ func (self *Seed) AddEmbed(stone *Seed, issuerPrivateKey string) error {
 
 
 // checks if a block has a signature
-func(self *Seed) HasSignature(blockName string) bool {
+func(self *Stone) HasSignature(blockName string) bool {
 	switch blockName {
 	case "meta", "ownership", "attributes", "embeds":
 		return self.Signatures[blockName] != nil && strings.TrimSpace(self.Signatures[blockName].(string)) != ""
@@ -261,7 +261,7 @@ func(self *Seed) HasSignature(blockName string) bool {
 
 // Verify one or all block. If blockName is set to an empty string,
 // all blocks are verified.
-func(self *Seed) Verify(blockName, issuerPublicKey string) error {
+func(self *Stone) Verify(blockName, issuerPublicKey string) error {
 
 	var canonicalString string
 
@@ -297,18 +297,18 @@ func(self *Seed) Verify(blockName, issuerPublicKey string) error {
 
 // checks if a stone object current state can
 // pass as a valid stone
-func(self *Seed) IsValid() error {
+func(self *Stone) IsValid() error {
 	return Validate(self.JSON())
 }
 
 // return stone as raw JSON string
-func(self *Seed) JSON() string {
+func(self *Stone) JSON() string {
 	bs, _ := json.Marshal(&self)
 	return string(bs)
 }
 
 // returns a map representation of the stone
-func(self *Seed) ToMap() map[string]interface{} {
+func(self *Stone) ToMap() map[string]interface{} {
 	jsonStr := self.JSON()
 	var dat map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &dat); err != nil {
@@ -318,13 +318,13 @@ func(self *Seed) ToMap() map[string]interface{} {
 }
 
 // return stone as a base64 json encoded string
-func(self *Seed) Encode() string {
+func(self *Stone) Encode() string {
 	jsonStr := self.JSON()
 	return crypto.ToBase64([]byte(jsonStr))
 }
 
 // clone a stone
-func(self *Seed) Clone() *Seed {
+func(self *Stone) Clone() *Stone {
 	jsonStr := self.JSON()
 	stone, err := LoadJSON(jsonStr)
 	if err != nil {
@@ -334,16 +334,16 @@ func(self *Seed) Clone() *Seed {
 }
 
 // checks if the ownership block contains any property
-func(self *Seed) HasOwnership() bool {
+func(self *Stone) HasOwnership() bool {
 	return len(self.Ownership) > 0
 }
 
 // checks if the attributes block contains any property
-func(self *Seed) HasAttributes() bool {
+func(self *Stone) HasAttributes() bool {
 	return len(self.Attributes) > 0
 }
 
 // checks if the embeds block contains any property
-func(self *Seed) HasEmbeds() bool {
+func(self *Stone) HasEmbeds() bool {
 	return len(self.Embeds) > 0
 }
