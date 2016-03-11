@@ -4,14 +4,17 @@ package stone
 import (
 	"crypto/sha1"
 	"fmt"
-	"github.com/nu7hatch/gouuid"
 	"math/rand"
 	"os"
-	"sort"
 	"encoding/json"
 	"strconv"
-	"strings"
+	"errors"
 	"time"
+	"bytes"
+	"bufio"
+
+	"github.com/nu7hatch/gouuid"
+	"github.com/jackpal/bencode-go"
 )
 
 func Println(any ...interface{}) {
@@ -60,40 +63,17 @@ func GetMapKeys(m map[string]interface{}) []string {
 	return mk
 }
 
-// Generate a canonical string representation of a map.
-// ValueType that is not int, string or map[string]interface{}
-// will be ignored
-func GetCanonicalMapString(m map[string]interface{}) string {
-	var cannonicalStr = []string{}
-	var keys = GetMapKeys(m)
-	sort.Strings(keys)
-	for _, key := range keys {
-		val := m[key]
-		switch d := val.(type) {
-		case int:
-			cannonicalStr = append(cannonicalStr, key+":"+strconv.Itoa(d))
-			break
-		case int32:
-			cannonicalStr = append(cannonicalStr, key+":"+strconv.Itoa(int(d)))
-			break
-		case int64:
-			cannonicalStr = append(cannonicalStr, key+":"+strconv.Itoa(int(d)))
-			break
-		case float32:
-			cannonicalStr = append(cannonicalStr, key+":" + fmt.Sprintf("%.3f", d))
-			break
-		case float64:
-			cannonicalStr = append(cannonicalStr, key+":" + fmt.Sprintf("%.3f", d))
-			break
-		case string:
-			cannonicalStr = append(cannonicalStr, key+":"+d)
-			break
-		case map[string]interface{}:
-			cannonicalStr = append(cannonicalStr, key+":"+GetCanonicalMapString(d))
-			break
-		}
-	}
-	return strings.Join(cannonicalStr, ":")
+// Generate a canonical string representation of a map using 
+// bencode.
+func CanonicalMap(m map[string]interface{}) (string, error) {
+	var b bytes.Buffer
+    w := bufio.NewWriter(&b)
+    err := bencode.Marshal(w, m)
+    if err != nil {
+    	return "", errors.New("Unable to bencode map: " + err.Error())
+    }
+    w.Flush()
+    return b.String(), nil
 }
 
 // checks if a key exists in a map

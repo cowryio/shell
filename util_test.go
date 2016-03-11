@@ -41,21 +41,6 @@ func TestGetMapKeys(t *testing.T) {
 	assert.Equal(t, r2, true)
 }
 
-// TestGetCanonicalMapString tests that a predictable, normalized string version of a map is returned
-func TestGetCanonicalMapString(t *testing.T) {
-	var m = map[string]interface{}{
-		"pete":    2,
-		"abraham": 30,
-		"jamie":   "jedi",
-		"zebra": map[string]interface{}{
-			"xonia":  "fighter",
-			"belami": "protector",
-		},
-	}
-	expected := "abraham:30:jamie:jedi:pete:2:zebra:belami:protector:xonia:fighter"
-	assert.Equal(t, expected, GetCanonicalMapString(m))
-}
-
 // TestHasKey tests that a key exist or doesn't exist in a map
 func TestHasKey(t *testing.T) {
 	var m = map[string]interface{}{
@@ -149,4 +134,21 @@ func TestCloneSliceOfInterface(t *testing.T) {
 	assert.ObjectsAreEqual(s, sCopy)
 	s[0] = "abcde"
 	assert.NotEqual(t, s[0], sCopy[0])
+}
+
+// TestCanonicalMap tests that a predictable, normalized string version of a map is returned
+func TestCanonicalMap(t *testing.T) {
+	var expected = "d7:abrahami30e5:jamie4:jedi4:petei2e5:zebrad6:belami9:protector5:xonia7:fighteree"
+	var m = map[string]interface{}{
+		"pete":    2,
+		"abraham": 30,
+		"jamie":   "jedi",
+		"zebra": map[string]interface{}{
+			"xonia":  "fighter",
+			"belami": "protector",
+		},
+	}
+	str, err := CanonicalMap(m)
+	assert.Nil(t, err)
+	assert.Equal(t, str, expected)
 }

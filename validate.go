@@ -27,6 +27,7 @@ func SetStartTime(t int64) {
 func ValidateMetaBlock(meta map[string]interface{}) error {
 
 	var createdAt int64
+	var err error
 
 	// must reject unexpected properties
 	accetableProps := []string{ "stone_id", "stone_type", "created_at" } 
@@ -66,11 +67,10 @@ func ValidateMetaBlock(meta map[string]interface{}) error {
 
 	// created_at is json.Number, convert to int64
 	if IsJSONNumber(meta["created_at"]) {
-		cAt, err := meta["created_at"].(json.Number).Int64()
+		createdAt, err = meta["created_at"].(json.Number).Int64()
 		if err != nil {
 			return errors.New("`meta.created_at` value type is invalid. Expects an integer")
 		}
-		createdAt = cAt
 	}
 
 	// created_at is an integer

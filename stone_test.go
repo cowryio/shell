@@ -100,7 +100,8 @@ func TestCorrectlySignMeta(t *testing.T) {
 	txt := TEST_STONE_DATA[0]
 	stone, err := LoadJSON(txt)
 	assert.Nil(t, err);
-	expectedCanonicalMapString := GetCanonicalMapString(stone.Meta)
+	expectedCanonicalMapString, err := CanonicalMap(stone.Meta)
+	assert.Nil(t, err);
 	signer, err := crypto.ParsePrivateKey([]byte(sampleKeys[0]))
 	assert.Nil(t, err)
 	expectedSignature, err := signer.Sign([]byte(expectedCanonicalMapString))

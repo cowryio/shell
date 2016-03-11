@@ -43,10 +43,8 @@ func Create(meta map[string]interface{}, issuerPrivateKey string) (*Stone, error
 	// validate meta
 	if err := ValidateMetaBlock(meta); err != nil {
     	return &Stone{}, err
-    } else {
-		meta["created_at"] = IntToFloat64(meta["created_at"])
     }
-
+    
     // set stone Meta field and create a meta signature
 	stone.Meta = meta
 	_, err := stone.Sign("meta", issuerPrivateKey)
@@ -146,23 +144,43 @@ func JSONToMap(jsonStr string) (map[string]interface{}, error) {
 func(self *Stone) Sign(blockName string, privateKey string) (string, error) {
 	
 	var canonicalString string
+	var err error
 
 	switch blockName {
+
 	case "meta":
-		canonicalString = GetCanonicalMapString(self.Meta)
+		canonicalString, err = CanonicalMap(self.Meta)
+		if err != nil {
+			return "", err
+		}
+		// canonicalString = signature
 		break
+
 	case "ownership":
-		canonicalString = GetCanonicalMapString(self.Ownership)
+		canonicalString, err = CanonicalMap(self.Ownership)
+		if err != nil {
+			return "", err
+		}
 		break
+
 	case "attributes":
-		canonicalString = GetCanonicalMapString(self.Attributes)
+		canonicalString, err = CanonicalMap(self.Attributes)
+		if err != nil {
+			return "", err
+		}
 		break
+
 	case "embeds": 
 		for _, stone := range self.Embeds {
-			canonicalString += ":" + GetCanonicalMapString(stone["meta"].(map[string]interface{}))
+			canonString, err := CanonicalMap(stone["meta"].(map[string]interface{}))
+			if err != nil {
+				return "", err
+			}
+			canonicalString += "," + canonString
 		}
-		canonicalString = strings.Trim(canonicalString, ":")
+		canonicalString = strings.Trim(canonicalString, ",")
 		break
+
 	default:
 		return "", errors.New("block unknown")
 	}
@@ -265,20 +283,42 @@ func(self *Stone) HasSignature(blockName string) bool {
 func(self *Stone) Verify(blockName, issuerPublicKey string) error {
 
 	var canonicalString string
+	var err error
 
 	switch blockName {
+
 	case "meta":
-		canonicalString = GetCanonicalMapString(self.Meta)
+		canonicalString, err = CanonicalMap(self.Meta)
+		if err != nil {
+			return err
+		}
+		break
+
 	case "ownership":
-		canonicalString = GetCanonicalMapString(self.Ownership)
+		canonicalString, err = CanonicalMap(self.Ownership)
+		if err != nil {
+			return err
+		}
+		break
+
 	case "attributes":
-		canonicalString = GetCanonicalMapString(self.Attributes)
+		canonicalString, err = CanonicalMap(self.Attributes)
+		if err != nil {
+			return err
+		}
+		break
+
 	case "embeds": 
 		for _, stone := range self.Embeds {
-			canonicalString += ":" + GetCanonicalMapString(stone["meta"].(map[string]interface{}))
+			canonString, err := CanonicalMap(stone["meta"].(map[string]interface{}))
+			if err != nil {
+				return err
+			}
+			canonicalString += "," + canonString
 		}
-		canonicalString = strings.Trim(canonicalString, ":")
+		canonicalString = strings.Trim(canonicalString, ",")
 		break
+
 	default:
 		return errors.New("block name "+blockName+" is unknown")
 	}
@@ -310,11 +350,12 @@ func(self *Stone) JSON() string {
 
 // returns a map representation of the stone
 func(self *Stone) ToMap() map[string]interface{} {
-	jsonStr := self.JSON()
-	var dat map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &dat); err != nil {
-        panic(err)
-    }
+	var dat = make(map[string]interface{})
+	dat["signatures"] = self.Signatures
+	dat["meta"] = self.Meta
+	dat["ownership"] = self.Ownership
+	dat["attributes"] = self.Attributes
+	dat["embeds"] = self.Embeds
     return dat
 }
 
