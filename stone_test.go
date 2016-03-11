@@ -13,8 +13,8 @@ var sampleKeys = []string{
 	"-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCroZieOAo9stcf6R6eWfo51VCv\nK8cLdNS577m/HIFOmEd1CDi/u7agGzpehNAhHpr5NVjQZ4Te+KMRn9SnpUK2hc8d\nUU25PQolsOEwePVQ18hHNK4Y2JvOY/f8KCO2hhrS6uuP6eedpnSdulS1OXHTL6Zx\nQmBd9F33gLT6BERHQwIDAQAB\n-----END PUBLIC KEY-----",
 }
 
-var TEST_SHELL_DATA = []string {
-	`{"signatures":{"meta":""},"meta":{"created_at":1453975575, "stone_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","stone_type":"currency"},"ownership":null,"embeds":[],"attributes":null}`,
+var TEST_STONE_DATA = []string {
+	`{"signatures":{"meta":""},"meta":{"created_at": 1453975575, "stone_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","stone_type":"currency"},"ownership":null,"embeds":[],"attributes":null}`,
 	`{"signatures":{"meta":"abcde","ownership":"abcde","attributes":"abcde","embeds":"abcde"},"meta":{"created_at": `+IntToString(time.Now().Unix())+`,"stone_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","stone_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[{"signatures":{"meta":"abcde","ownership":"abcde"},"meta":{"created_at":1454443443,"stone_id":"9417781906fb0a89c295959b0df01782dbc4dc9f","stone_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[{"signatures":{"meta":"abcde","ownership":"abcde"},"meta":{"created_at":1454443443,"stone_id":"514417781906fb0a89c295959b0df01782dbc4dc9f","stone_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[],"attributes":{}}],"attributes":{}}],"attributes":{"some_data":"some_value"}}`,
 }
 
@@ -73,7 +73,7 @@ func TestCantLoadMalformedJSON(t *testing.T) {
 
 // TestLoadJSON tests that a valid stone json string can be loaded into a stone object
 func TestLoadJSON(t *testing.T) {
-	txt := TEST_SHELL_DATA[0]
+	txt := TEST_STONE_DATA[0]
 	stone, err := LoadJSON(txt)
 	assert.Nil(t, err);
 	assert.IsType(t, &Stone{}, stone)
@@ -81,7 +81,7 @@ func TestLoadJSON(t *testing.T) {
 
 // TestLoadEncodedJSON tests that a base 64 encoded json string can be loaded into a stone object
 func TestLoadEncodedJSON(t *testing.T) {
-	encodedJSON := crypto.ToBase64([]byte(TEST_SHELL_DATA[0]))
+	encodedJSON := crypto.ToBase64([]byte(TEST_STONE_DATA[0]))
 	stone, err := Load(encodedJSON)
 	assert.Nil(t, err);
 	assert.IsType(t, &Stone{}, stone)
@@ -97,7 +97,7 @@ func TestCannotLoadInvalidEncodedJSON(t *testing.T) {
 
 // TestCorrectlySignMeta tests that a stone is correctly signed
 func TestCorrectlySignMeta(t *testing.T) {
-	txt := TEST_SHELL_DATA[0]
+	txt := TEST_STONE_DATA[0]
 	stone, err := LoadJSON(txt)
 	assert.Nil(t, err);
 	expectedCanonicalMapString := GetCanonicalMapString(stone.Meta)
@@ -113,7 +113,7 @@ func TestCorrectlySignMeta(t *testing.T) {
 
 // TestCannotSignUnknownBlock tests that an error will occur when attempting to sign an unknown block
 func TestCannotSignUnknownBlock(t *testing.T) {
-	txt := TEST_SHELL_DATA[0]
+	txt := TEST_STONE_DATA[0]
 	stone, err := LoadJSON(txt)
 	assert.Nil(t, err)
 	_, err = stone.Sign("unknown_block", sampleKeys[0])
@@ -258,7 +258,7 @@ func TestCallVerifyWhenBlockSignatureInvalid(t *testing.T) {
 // TestVerifyMeta tests that a meta block signed with a private key is 
 // successfully verified using the corresponding public key
 func TestVerifyMeta(t *testing.T) {
-	stone, err := LoadJSON(TEST_SHELL_DATA[1]);
+	stone, err := LoadJSON(TEST_STONE_DATA[1]);
 	assert.Nil(t, err)
 	stone.Sign("meta", sampleKeys[0])
 	err = stone.Verify("meta", sampleKeys[2])
@@ -268,7 +268,7 @@ func TestVerifyMeta(t *testing.T) {
 // TestVerifyOwnership tests that an ownership block signed with a private key is 
 // successfully verified using the corresponding public key
 func TestVerifyOwnership(t *testing.T) {
-	stone, err := LoadJSON(TEST_SHELL_DATA[1]);
+	stone, err := LoadJSON(TEST_STONE_DATA[1]);
 	assert.Nil(t, err)
 	stone.Sign("ownership", sampleKeys[0])
 	err = stone.Verify("ownership", sampleKeys[2])
@@ -278,7 +278,7 @@ func TestVerifyOwnership(t *testing.T) {
 // TestVerifyAttributes tests that an `attributes` block signed with a private key is 
 // successfully verified using the corresponding public key
 func TestVerifyAttributes(t *testing.T) {
-	stone, err := LoadJSON(TEST_SHELL_DATA[1]);
+	stone, err := LoadJSON(TEST_STONE_DATA[1]);
 	assert.Nil(t, err)
 	stone.Sign("attributes", sampleKeys[0])
 	err = stone.Verify("attributes", sampleKeys[2])
@@ -288,7 +288,7 @@ func TestVerifyAttributes(t *testing.T) {
 // TestVerifyEmbeds tests that an `attributes` block signed with a private key is 
 // successfully verified using the corresponding public key
 func TestVerifyEmbeds(t *testing.T) {
-	stone, err := LoadJSON(TEST_SHELL_DATA[1]);
+	stone, err := LoadJSON(TEST_STONE_DATA[1]);
 	assert.Nil(t, err)
 	stone.Sign("embeds", sampleKeys[0])
 	err = stone.Verify("embeds", sampleKeys[2])
@@ -297,7 +297,7 @@ func TestVerifyEmbeds(t *testing.T) {
 
 // TestCloneStone
 func TestCloneStone(t *testing.T) {
-	stone, err := LoadJSON(TEST_SHELL_DATA[1]);
+	stone, err := LoadJSON(TEST_STONE_DATA[1]);
 	assert.Nil(t, err)
 	clone := stone.Clone()
 	assert.Exactly(t, stone, clone) 
@@ -307,14 +307,14 @@ func TestCloneStone(t *testing.T) {
 
 // TestHasOwnershipFalse tests that a stone does not have any ownership information
 func TestHasOwnershipFalse(t *testing.T) {
-	stone, err := LoadJSON(TEST_SHELL_DATA[0]);
+	stone, err := LoadJSON(TEST_STONE_DATA[0]);
 	assert.Nil(t, err)
 	assert.Equal(t, stone.HasOwnership(), false)
 }
 
 // TestHasOwnershipTrue tests that a stone has ownership information
 func TestHasOwnershipTrue(t *testing.T) {
-	stone, err := LoadJSON(TEST_SHELL_DATA[0]);
+	stone, err := LoadJSON(TEST_STONE_DATA[0]);
 	assert.Nil(t, err)
 	var ownership = map[string]interface{}{
 		"type": "sole",
@@ -329,7 +329,7 @@ func TestHasOwnershipTrue(t *testing.T) {
 
 // TestHasAttributesTrue tests that a stone has attributes information
 func TestHasAttributesTrue(t *testing.T) {
-	stone, err := LoadJSON(TEST_SHELL_DATA[0]);
+	stone, err := LoadJSON(TEST_STONE_DATA[0]);
 	assert.Nil(t, err)
 	var attrs = map[string]interface{}{
 		"some_data": "some_value",
@@ -341,7 +341,7 @@ func TestHasAttributesTrue(t *testing.T) {
 
 // TestHasAttributesFalse tests that a stone does not have attributes information
 func TestHasAttributesFalse(t *testing.T) {
-	stone, err := LoadJSON(TEST_SHELL_DATA[0]);
+	stone, err := LoadJSON(TEST_STONE_DATA[0]);
 	assert.Nil(t, err)
 	assert.Equal(t, stone.HasAttributes(), false)
 }

@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"sort"
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -197,10 +198,30 @@ func CloneSliceOfInterface(s []interface{}) []interface{} {
 	return newSlice
 }
 
-// check if a value supplied is int, float64, float32 or int64
+// check whether the value passed is int, float64, float32 or int64
 func IsNumberValue(val interface{}) bool {
 	switch val.(type) {
 	case int, int64, float32, float64:
+		return true
+	default:
+		return false
+	}
+}
+
+// checks whether the value passed is an integer
+func IsInt(val interface{}) bool {
+	switch val.(type) {
+	case int, int64:
+		return true
+	default:
+		return false
+	}
+}
+
+// checks whether the value passed is a json.Number type
+func IsJSONNumber(val interface{}) bool {
+	switch val.(type) {
+	case json.Number:
 		return true
 	default:
 		return false

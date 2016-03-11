@@ -34,7 +34,8 @@ func Empty() *Stone {
 	return initialize(sh)
 }
 
-// Create a stone.The new stone is immediately signed using the issuer's private key
+// Create a stone with a inital meta block
+// The new stone is immediately signed using the issuer's private key
 func Create(meta map[string]interface{}, issuerPrivateKey string) (*Stone, error) {
 
 	stone := initialize(&Stone{})
@@ -100,17 +101,16 @@ func loadMap(data map[string]interface{}) (*Stone, error) {
 func Load(stoneStr string) (*Stone, error) {
 	stoneStr = strings.TrimSpace(stoneStr)
 	if stoneStr == "" {
-		return &Stone{}, errors.New("Cannot load empty stone string")
+		return &Stone{}, errors.New("Cannot load empty string")
 	} else {
 		if fmt.Sprintf("%c", stoneStr[0]) == "{" {					// json string
 			return LoadJSON(stoneStr)
-		} else {
-			decodedStoneStr, err := crypto.FromBase64(stoneStr)
-			if err != nil {
-				return &Stone{}, errors.New("unable to decode encoded stone string")
-			}
-			return LoadJSON(decodedStoneStr)
+		} 
+		decodedStoneStr, err := crypto.FromBase64(stoneStr)
+		if err != nil {
+			return &Stone{}, errors.New("unable to decode encoded stone string")
 		}
+		return LoadJSON(decodedStoneStr)
 	}
 }
 
@@ -132,6 +132,7 @@ func LoadJSON(jsonStr string) (*Stone, error) {
 func JSONToMap(jsonStr string) (map[string]interface{}, error) {
 	var data map[string]interface{}
 	d := json.NewDecoder(strings.NewReader(jsonStr))
+	d.UseNumber();
 	if err := d.Decode(&data); err != nil {
         return make(map[string]interface{}), errors.New("unable to parse json string");
     }
@@ -139,8 +140,8 @@ func JSONToMap(jsonStr string) (map[string]interface{}, error) {
 }
 
 
-// Sign any stone block by creating a canonical string representation
-// of the block value and signing with the issuer's private key. The computed signature
+// Sign any block by creating a canonical string representation
+// of the block's value and signing with the issuer's private key. The computed signature
 // is store the `signatures` block
 func(self *Stone) Sign(blockName string, privateKey string) (string, error) {
 	

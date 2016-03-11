@@ -104,7 +104,7 @@ func TestCreatedAtMustBeNumber(t *testing.T) {
 	}
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
-	expectedMsg := "`created_at` value type is invalid. Expects a number"
+	expectedMsg := "`meta.created_at` value type is invalid. Expects an integer"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
@@ -117,7 +117,7 @@ func TestCreatedAtBeforeStartTime(t *testing.T) {
 	}
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
-	expectedMsg := "`created_at` value is too far in the past. Expects unix time on or after 2016-01-28T11:06:15+01:00"
+	expectedMsg := "`meta.created_at` value is too far in the past. Expects unix time on or after 2016-01-28T11:06:15+01:00"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
@@ -165,7 +165,7 @@ func TestOwnershipSignatureTypeMustBeString(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestAttributesSignatureTypeMustBeString tests that when `attributes` 
+// // TestAttributesSignatureTypeMustBeString tests that when `attributes` 
 // property is set, it's value type must be string
 func TestAttributesSignatureTypeMustBeString(t *testing.T) {
 	d := map[string]interface{}{

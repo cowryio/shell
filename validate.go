@@ -4,14 +4,29 @@ package stone
 import "errors"
 import "encoding/json"
 import "fmt"
+import "strings"
 import "time"
 
+// the unix time that indicates the time from when
+// a meta.created_at time must start from
+var START_TIME int64 = 1453975575
+
+
+// Set the start time
+func SetStartTime(t int64) {
+	START_TIME = t
+}
+
+
 // Validate `meta` block
+// * Must not contain unknown properties
 // * A valid meta block must contain stone_id, stone_type and created_at properties
 // * stone_id must be string and 40 characters in length
 // * stone_type must be string
-// * created_at must be a valid unix date in the past but not beyond a start/launch time
+// * created_at must be an interger and a valid unix date in the past but not beyond a start/launch time
 func ValidateMetaBlock(meta map[string]interface{}) error {
+
+	var createdAt int64
 
 	// must reject unexpected properties
 	accetableProps := []string{ "stone_id", "stone_type", "created_at" } 
@@ -29,47 +44,63 @@ func ValidateMetaBlock(meta map[string]interface{}) error {
 		} 
 	}
 
-	// stone id must be a string and should be 40 characters in length
+	// stone id must be a string
 	if !IsStringValue(meta["stone_id"]) {
 		return errors.New("`meta.stone_id` value type is invalid. Expects string value")
-	} else {
-		if len(meta["stone_id"].(string)) != 40 {
-			return errors.New("`meta.stone_id` must have 40 characters. Preferrable a UUIDv4 SHA1 hashed string")
-		}
 	}
 
+	// stone id must be 40 characters in length
+	if len(meta["stone_id"].(string)) != 40 {
+		return errors.New("`meta.stone_id` must have 40 characters. Preferrable a UUIDv4 SHA1 hashed string")
+	}
+	
 	// stone_type must be string
 	if !IsStringValue(meta["stone_type"]) {
 		return errors.New("`meta.stone_type` value type is invalid. Expects string value")
 	}
 
-	// created_at should be a number
-	if !IsNumberValue(meta["created_at"]) {
-		return errors.New("`created_at` value type is invalid. Expects a number")
-	} else {
+	// created_at must be a json number (integer or float as string)
+	if !IsJSONNumber(meta["created_at"]) && !IsInt(meta["created_at"]) {
+		return errors.New("`meta.created_at` value type is invalid. Expects an integer")
+	}
 
-		// the unix time that indicates the time from when
-		// a meta.created_at time must start from
-		START_TIME := ToInt64(Env("LAUNCH_TIME", "1453975575")) 
-
-		// created_date should not be too old or in the future
-		createdAt := UnixToTime(ToInt64(meta["created_at"]))
-		startTime := UnixToTime(START_TIME)
-
-		if createdAt.Before(startTime) {
-			return errors.New("`created_at` value is too far in the past. Expects unix time on or after " + startTime.Format(time.RFC3339))
-		} else if createdAt.After(time.Now().UTC()) {
-			return errors.New("`created_at` value cannot be a unix time in the future")
+	// created_at is json.Number, convert to int64
+	if IsJSONNumber(meta["created_at"]) {
+		cAt, err := meta["created_at"].(json.Number).Int64()
+		if err != nil {
+			return errors.New("`meta.created_at` value type is invalid. Expects an integer")
 		}
+		createdAt = cAt
+	}
+
+	// created_at is an integer
+	if IsInt(meta["created_at"]) {
+		createdAt = ToInt64(meta["created_at"])
+	}
+	
+	// make time objects
+	createdAtTime := UnixToTime(createdAt)
+	startTime := UnixToTime(START_TIME)
+
+	// date of creation cannot be before the start time
+	if createdAtTime.Before(startTime) {
+		return errors.New("`meta.created_at` value is too far in the past. Expects unix time on or after " + startTime.Format(time.RFC3339))
+	}
+
+	// date of creation cannot be a time in the future
+	if createdAtTime.After(time.Now().UTC()) {
+		return errors.New("`meta.created_at` value cannot be a unix time in the future")
 	}
 
 	return nil
 }
 
 // Validate `signature` block'
-// * `meta` signature must be present and must be a string type
-// * `attributes` property must be string type if set
-// * `ownership` property must be string type if set
+// * must contain only acceptable properties (meta, ownership, embeds)
+// *`meta` signature must be present and must be a string type
+// *`attributes` property must be string type if set
+// *`ownership` property must be string type if set
+// *`embeds` property must be string type if set
 func ValidateSignaturesBlock(signatures map[string]interface{}) error {
 
 	// must reject unexpected properties
@@ -128,10 +159,18 @@ func ValidateOwnershipBlock(ownership map[string]interface{}) error {
 
 	// `type` property must be set
 	if ownership["type"] != nil {
+
+		// type property must have string value
+		if !IsStringValue(ownership["type"]) {
+			return errors.New("`ownership.type` value type is invalid. Expects string value")
+		}
+		
+		// type property value must be known
 		acceptableValues := []string{"sole"}
 		if !InStringSlice(acceptableValues, ownership["type"].(string)) {
 			return errors.New("`ownership.type` property has unexpected value")
 		}
+
 	} else {
 		return errors.New("`ownership` block is missing `type` property")
 	}	
@@ -176,14 +215,15 @@ func ValidateOwnershipBlock(ownership map[string]interface{}) error {
 
 // Validate a stone. This function ensures 
 // the existence of mandatory stone properties and attributes.
-// TODO: if ownership block exists, signatures block must have ownership property
 func Validate(stoneData interface{}) error {
 
 	// parse stone data to map[string]interface{} stoneData is string
 	var data map[string]interface{}
 	switch d := stoneData.(type) {
 	case string:
-		if err := json.Unmarshal([]byte(d), &data); err != nil {
+		decoder := json.NewDecoder(strings.NewReader(d))
+		decoder.UseNumber();
+		if err := decoder.Decode(&data); err != nil {
 	        return errors.New("unable to parse json string");
 	    }
 	    break;
@@ -264,6 +304,8 @@ func Validate(stoneData interface{}) error {
     	}
 
     	embeds := data["embeds"].([]interface{})
+
+    	// no need validating embeds if it is empty
     	if len(embeds) == 0 {
     		return nil
     	}
