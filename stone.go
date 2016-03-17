@@ -10,21 +10,24 @@ import (
 	"github.com/ellcrys/crypto"
 )
 
+// known block names
+var KnownBlockNames = []string{ "meta", "ownership", "attributes", "embeds" }
+
 type Stone struct {
-	Signatures map[string]interface{} 		`json:"signatures"`
-	Meta map[string]interface{}				`json:"meta"`
-	Ownership map[string]interface{} 		`json:"ownership"`
-	Embeds []map[string]interface{} 		`json:"embeds"`
-	Attributes map[string]interface{}		`json:"attributes"`
+	Meta 		map[string]interface{}		`json:"meta"`
+	Ownership 	map[string]interface{} 		`json:"ownership"`
+	Embeds 		map[string]interface{} 		`json:"embeds"`
+	Attributes 	map[string]interface{}		`json:"attributes"`
+	Signatures 	map[string]interface{} 		`json:"signatures"`
 }
 
 // Initialize a stone
 func initialize(stone *Stone) *Stone {
-	stone.Signatures = make(map[string]interface{})
-	stone.Meta = make(map[string]interface{})
-	stone.Ownership = make(map[string]interface{})
-	stone.Embeds = []map[string]interface{}{}
-	stone.Attributes = make(map[string]interface{})
+	stone.Meta 			= make(map[string]interface{})
+	stone.Ownership 	= make(map[string]interface{})
+	stone.Embeds 		= make(map[string]interface{})
+	stone.Attributes 	= make(map[string]interface{})
+	stone.Signatures 	= make(map[string]interface{})
 	return stone
 }
 
@@ -60,12 +63,7 @@ func Create(meta map[string]interface{}, issuerPrivateKey string) (*Stone, error
 // is necessary
 func loadMap(data map[string]interface{}) (*Stone, error) {
 
-	var stone = &Stone{}
-
-	// add signatures
-    if signatures := data["signatures"]; signatures != nil {
-    	stone.Signatures = data["signatures"].(map[string]interface{})
-    }
+	var stone = initialize(&Stone{})
 
     // add meta
     if meta := data["meta"]; meta != nil {
@@ -84,119 +82,116 @@ func loadMap(data map[string]interface{}) (*Stone, error) {
 
     // add embeds
     if embeds := data["embeds"]; embeds != nil {
-    	for _, m := range embeds.([]interface{}) {
-    		stone.Embeds = append(stone.Embeds, m.(map[string]interface{}))
-    	}
+    	stone.Embeds = data["embeds"].(map[string]interface{})
     }
 
     return stone, nil
 }
 
-// Creates a new stone from a raw json or base 64 encoded json string. It does not 
-// attempt to sign the blocks. 
-// If the string passed in starts with "{", it is considered a JSON string, otherwise, it assumes string is base 64 encoded and
-// will attempt to decoded it. 
+// Creates a new stone from a json string. It does not attempt to sign the blocks. 
 func Load(stoneStr string) (*Stone, error) {
+
+	// empty string not allowed
 	stoneStr = strings.TrimSpace(stoneStr)
 	if stoneStr == "" {
 		return &Stone{}, errors.New("Cannot load empty string")
-	} else {
-		if fmt.Sprintf("%c", stoneStr[0]) == "{" {					// json string
-			return LoadJSON(stoneStr)
-		} 
-		decodedStoneStr, err := crypto.FromBase64(stoneStr)
-		if err != nil {
-			return &Stone{}, errors.New("unable to decode encoded stone string")
-		}
-		return LoadJSON(decodedStoneStr)
-	}
+	} 
+
+	return LoadJSON(stoneStr)
 }
 
 
 // Create a stone from a json string by converting
 // it to a map and then used to load a new stone instance
 func LoadJSON(jsonStr string) (*Stone, error) {
+
 	data, err := JSONToMap(jsonStr)
 	if err != nil{
         return &Stone{}, err;
     }
+    
+    // validate...
     if err := Validate(data); err != nil {
     	return &Stone{}, err
     }
+
 	return loadMap(data)  
 }
 
-// converts a json string to map 
-func JSONToMap(jsonStr string) (map[string]interface{}, error) {
-	var data map[string]interface{}
-	d := json.NewDecoder(strings.NewReader(jsonStr))
-	d.UseNumber();
-	if err := d.Decode(&data); err != nil {
-        return make(map[string]interface{}), errors.New("unable to parse json string");
-    }
-	return data, nil
+// get a block or panic of block is unknown
+func(self *Stone) getBlock(name string) map[string]interface{} {
+	if name == "meta" { return self.Meta }
+	if name == "ownership" { return self.Ownership }
+	if name == "attributes" { return self.Attributes }
+	if name == "embeds" { return self.Embeds }
+	panic("unknown block")
 }
 
-
-// Sign any block by creating a canonical string representation
-// of the block's value and signing with the issuer's private key. The computed signature
-// is store the `signatures` block
+// Sign a block. The signing process takes the value of a block and signs
+// it using JWS. The signature generated is included in the 
+// `signatures` block. If a block is empty or unknown, an error is returned.
 func(self *Stone) Sign(blockName string, privateKey string) (string, error) {
 	
-	var canonicalString string
-	var err error
-
-	switch blockName {
-
-	case "meta":
-		canonicalString, err = CanonicalMap(self.Meta)
-		if err != nil {
-			return "", err
-		}
-		// canonicalString = signature
-		break
-
-	case "ownership":
-		canonicalString, err = CanonicalMap(self.Ownership)
-		if err != nil {
-			return "", err
-		}
-		break
-
-	case "attributes":
-		canonicalString, err = CanonicalMap(self.Attributes)
-		if err != nil {
-			return "", err
-		}
-		break
-
-	case "embeds": 
-		for _, stone := range self.Embeds {
-			canonString, err := CanonicalMap(stone["meta"].(map[string]interface{}))
-			if err != nil {
-				return "", err
-			}
-			canonicalString += "," + canonString
-		}
-		canonicalString = strings.Trim(canonicalString, ",")
-		break
-
-	default:
-		return "", errors.New("block unknown")
-	}
+	var block map[string]interface{}
 
 	signer, err := crypto.ParsePrivateKey([]byte(privateKey))
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("Private Key Error: %v", err))
+		return "", errors.New("Private Key Error: " + err.Error())
 	}
 
-	signature, err := signer.Sign([]byte(canonicalString))
+	// block name must be known
+	if !InStringSlice(KnownBlockNames, blockName) {
+		return "", errors.New("block unknown")
+	}
+
+	block = self.getBlock(blockName)
+	if IsMapEmpty(block) {
+		return "", errors.New("failed to sign empty block")
+	}
+
+	// sign block
+	payload, _ := MapToJSON(block)
+	signature, err := signer.JWS_RSA_Sign(payload)
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("Signature Error: %v", err))
+		return "", errors.New("failed to sign block")
 	}
-
+	
 	self.Signatures[blockName] = signature
 	return signature, nil
+}
+
+
+// Verify a block. 
+func(self *Stone) Verify(blockName, issuerPublicKey string) error {
+
+	signer, err := crypto.ParsePublicKey([]byte(issuerPublicKey))
+	if err != nil {
+		return errors.New(fmt.Sprintf("Public Key Error: %v", err))
+	}
+
+	// block name must be known
+	if !InStringSlice(KnownBlockNames, blockName) {
+		return errors.New("block unknown")
+	}
+
+	// ensure block has signature
+	if !self.HasSignature(blockName) {
+		return errors.New("block `"+blockName+"` has no signature")
+	}
+
+	// verify
+	_, err = signer.JWS_RSA_Verify(self.Signatures[blockName].(string))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}  
+
+// Encode a base64 url equivalent of the signatures.
+func(self *Stone) Encode() string {
+	var signaturesStr, _ = MapToJSON(self.Signatures)
+	return crypto.ToBase64([]byte(signaturesStr))
 }
 
 // Assign and sign a valid meta value to the meta block
@@ -221,8 +216,13 @@ func(self *Stone) AddMeta(meta map[string]interface{}, issuerPrivateKey string) 
 // Assign and sign a valid ownership data to the ownership block
 func (self *Stone) AddOwnership(ownership map[string]interface{}, issuerPrivateKey string) error {
 
+	var metaID = ""
+	if self.Meta["id"] != nil {
+		metaID = self.Meta["id"].(string)
+	}
+
 	// validate 
-	if err := ValidateOwnershipBlock(ownership); err != nil {
+	if err := ValidateOwnershipBlock(ownership, metaID); err != nil {
     	return err
     }
 
@@ -240,6 +240,16 @@ func (self *Stone) AddOwnership(ownership map[string]interface{}, issuerPrivateK
 // Assign a attribute data to the attributes bloc
 func (self *Stone) AddAttributes(attributes map[string]interface{}, issuerPrivateKey string) error {
 	
+	var metaID = ""
+	if self.Meta["id"] != nil {
+		metaID = self.Meta["id"].(string)
+	}
+
+	// validate 
+	if err := ValidateAttributesBlock(attributes, metaID); err != nil {
+    	return err
+    }
+
 	self.Attributes = attributes
 
 	// sign block
@@ -253,6 +263,16 @@ func (self *Stone) AddAttributes(attributes map[string]interface{}, issuerPrivat
 
 // add a stone to the `embeds` block
 func (self *Stone) AddEmbed(stone *Stone, issuerPrivateKey string) error {
+
+	var metaID = ""
+	if self.Meta["id"] != nil {
+		metaID = self.Meta["id"].(string)
+	}
+
+	// validate 
+	if err := ValidateEmbedsBlock(, metaID); err != nil {
+    	return err
+    }
 
 	self.Embeds = append(self.Embeds, stone.ToMap())
 
@@ -270,71 +290,13 @@ func (self *Stone) AddEmbed(stone *Stone, issuerPrivateKey string) error {
 func(self *Stone) HasSignature(blockName string) bool {
 	switch blockName {
 	case "meta", "ownership", "attributes", "embeds":
-		return self.Signatures[blockName] != nil && strings.TrimSpace(self.Signatures[blockName].(string)) != ""
+		return self.Signatures[blockName] != nil
 		break
 	default:
 		return false
 	}
 	return false
 }
-
-// Verify one or all block. If blockName is set to an empty string,
-// all blocks are verified.
-func(self *Stone) Verify(blockName, issuerPublicKey string) error {
-
-	var canonicalString string
-	var err error
-
-	switch blockName {
-
-	case "meta":
-		canonicalString, err = CanonicalMap(self.Meta)
-		if err != nil {
-			return err
-		}
-		break
-
-	case "ownership":
-		canonicalString, err = CanonicalMap(self.Ownership)
-		if err != nil {
-			return err
-		}
-		break
-
-	case "attributes":
-		canonicalString, err = CanonicalMap(self.Attributes)
-		if err != nil {
-			return err
-		}
-		break
-
-	case "embeds": 
-		for _, stone := range self.Embeds {
-			canonString, err := CanonicalMap(stone["meta"].(map[string]interface{}))
-			if err != nil {
-				return err
-			}
-			canonicalString += "," + canonString
-		}
-		canonicalString = strings.Trim(canonicalString, ",")
-		break
-
-	default:
-		return errors.New("block name "+blockName+" is unknown")
-	}
-
-	signer, err := crypto.ParsePublicKey([]byte(issuerPublicKey))
-	if err != nil {
-		return errors.New(fmt.Sprintf("Public Key Error: %v", err))
-	}
-
-	// block has no signature
-	if !self.HasSignature(blockName) {
-		return errors.New("block `"+blockName+"` has no signature")
-	}
-	
-	return signer.Verify([]byte(canonicalString), self.Signatures[blockName].(string))
-}  
 
 // checks if a stone object current state can
 // pass as a valid stone
@@ -357,12 +319,6 @@ func(self *Stone) ToMap() map[string]interface{} {
 	dat["attributes"] = self.Attributes
 	dat["embeds"] = self.Embeds
     return dat
-}
-
-// return stone as a base64 json encoded string
-func(self *Stone) Encode() string {
-	jsonStr := self.JSON()
-	return crypto.ToBase64([]byte(jsonStr))
 }
 
 // clone a stone

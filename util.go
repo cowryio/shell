@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"errors"
 	"time"
-	"bytes"
-	"bufio"
+	"strings"
+	"path/filepath"
+	"io/ioutil"
 
 	"github.com/nu7hatch/gouuid"
-	"github.com/jackpal/bencode-go"
 )
 
 func Println(any ...interface{}) {
@@ -61,19 +61,6 @@ func GetMapKeys(m map[string]interface{}) []string {
 		i++
 	}
 	return mk
-}
-
-// Generate a canonical string representation of a map using 
-// bencode.
-func CanonicalMap(m map[string]interface{}) (string, error) {
-	var b bytes.Buffer
-    w := bufio.NewWriter(&b)
-    err := bencode.Marshal(w, m)
-    if err != nil {
-    	return "", errors.New("Unable to bencode map: " + err.Error())
-    }
-    w.Flush()
-    return b.String(), nil
 }
 
 // checks if a key exists in a map
@@ -149,33 +136,6 @@ func InStringSlice(ss []string, val string) bool {
 // convert a unix time to time object
 func UnixToTime(i int64) time.Time {
 	return time.Unix(i, 0)
-}
-
-// copy the contents in a map of interface{} to another similar map
-func CloneMapInterface(m map[string]interface{}) map[string]interface{} {
-	newMap := make(map[string]interface{})
-	for k, v := range m {
-		newMap[k] = v
-	}
-	return newMap
-}
-
-// clone a slice of map with key type of string and value of interface{}
-func CloneSliceMapInterface(sm []map[string]interface{}) []map[string]interface{} {
-	newSliceMap := make([]map[string]interface{}, len(sm))
-	for i, m := range sm {
-		newSliceMap[i] = CloneMapInterface(m)
-	}
-	return newSliceMap
-}
-
-// clone slice of interface{}
-func CloneSliceOfInterface(s []interface{}) []interface{} {
-	newSlice := make([]interface{}, len(s))
-	for i, v := range s {
-		newSlice[i] = v
-	} 
-	return newSlice
 }
 
 // check whether the value passed is int, float64, float32 or int64
@@ -259,4 +219,31 @@ func IsMapEmpty(m map[string]interface{}) bool {
 // converts int to string
 func IntToString(v int64) string {
 	return fmt.Sprintf("%d", v)
+}
+
+// Given a map, it returns a json string representation of it
+func MapToJSON(m map[string]interface{}) (string, error) {
+	bs, err := json.Marshal(&m)
+	if err != nil {
+		return "", err;
+	}
+	return string(bs), nil;
+}
+
+// Given a json string, it decodes it into a map
+func JSONToMap(jsonStr string) (map[string]interface{}, error) {
+	var data map[string]interface{}
+	d := json.NewDecoder(strings.NewReader(jsonStr))
+	d.UseNumber()
+	if err := d.Decode(&data); err != nil {
+        return make(map[string]interface{}), errors.New("unable to parse json string");
+    }
+	return data, nil
+}
+
+// Read files from /tests/fixtures/ directory
+func ReadFromFixtures(path string) string {
+	absPath, _ := filepath.Abs("../stone/tests/fixtures/" + path)
+	dat, _ := ioutil.ReadFile(absPath)
+	return string(dat)
 }

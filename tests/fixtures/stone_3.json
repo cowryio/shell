@@ -1,0 +1,19 @@
+{ 
+	"signatures": { 
+		"meta": "abcde",
+		"ownership": "abcde"
+	}, 
+	"meta": { 
+		"id": "514417781906fb0a89c295959b0df01782dbc4dc", 
+		"type": "cur", 
+		"created_at": 1453975575 
+	},
+	"ownership": { 
+		"ref_id": "514417781906fb0a89c295959b0df01782dbc4dc",
+		"type": "sole", 
+		"sole": {
+			"address_id": "1234"
+		} 
+	},
+	"attributes": "abcde"
+}

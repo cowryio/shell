@@ -1,6 +1,7 @@
 package stone
 
 import "testing"
+import "time"
 import "github.com/stretchr/testify/assert"
 
 // TestInvalidJSON tests that an invalid json string returns an error
@@ -9,6 +10,44 @@ func TestInvalidJSON(t *testing.T) {
 	err := Validate(str)
 	assert.NotNil(t, err)
 	expectedMsg := `unable to parse json string`
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestValidateWithMap tests that a map representing a stone can be passed to Validate()
+func TestValidateWithMap(t *testing.T) {
+	s := map[string]interface{}{
+		"meta": map[string]interface{}{
+			"id": NewID(),
+			"type": "coupon",
+			"created_at": time.Now().Unix(),
+		},
+	}
+	err := Validate(s)
+	assert.Nil(t, err)
+}
+
+// TestValidateWithUnsupportedType tests that an unsupported type will not be allowed
+func TestValidateWithUnsupportedType(t *testing.T) {
+	err := Validate(123)
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "unsupported parameter type")
+}
+
+// TestMustHaveMetaBlock tests that a json string must have a `meta` property
+func TestMustHaveMetaBlock(t *testing.T) {
+	var str = `{}`
+	err := Validate(str)
+	assert.NotNil(t, err)
+	expectedMsg := "missing `meta` block"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestInvalidMetaValueType tests that the `meta` block value type must be a JSON object
+func TestInvalidMetaValueType(t *testing.T) {
+	var str = `{ "meta": "some stuff" }`
+	err := Validate(str)
+	assert.NotNil(t, err)
+	expectedMsg := "`meta` block value type is invalid. Expects a JSON object"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
@@ -24,31 +63,31 @@ func TestMetaBlockHasUnexpectedProperty(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestMetaMustHaveStoneIDProperty tests that a meta block data must have a `stone_id` property
+// TestMetaMustHaveStoneIDProperty tests that a meta block data must have a `id` property
 func TestMetaMustHaveStoneIDProperty(t *testing.T) {
 	var d = make(map[string]interface{})
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
-	expectedMsg := "`meta` block is missing `stone_id` property"
+	expectedMsg := "`meta` block is missing `id` property"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestMetaMustHaveStoneTypeProperty tests that stone_type property is set
+// TestMetaMustHaveStoneTypeProperty tests that type property is set
 func TestMetaMustHaveStoneTypeProperty(t *testing.T) {
 	d := map[string]interface{}{
-		"stone_id": 1234,
+		"id": 1234,
 	}
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
-	expectedMsg := "`meta` block is missing `stone_type` property"
+	expectedMsg := "`meta` block is missing `type` property"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
 // TestMetaMustHaveCreatedAtProperty tests that created_at property is set
 func TestMetaMustHaveCreatedAtProperty(t *testing.T) {
 	d := map[string]interface{}{
-		"stone_id":   1234,
-		"stone_type": "coupon",
+		"id":   1234,
+		"type": "coupon",
 	}
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
@@ -56,63 +95,63 @@ func TestMetaMustHaveCreatedAtProperty(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestStoneIDNotString tests that stone_id value type must be string
+// TestStoneIDNotString tests that id value type must be string
 func TestStoneIDMustString(t *testing.T) {
 	d := map[string]interface{}{
-		"stone_id":   1234,
-		"stone_type": "coupon",
+		"id":   1234,
+		"type": "coupon",
 		"created_at": 1000,
 	}
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
-	expectedMsg := "`meta.stone_id` value type is invalid. Expects string value"
+	expectedMsg := "`meta.id` value type is invalid. Expects a string"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestStoneIDLengthInvalid tests that a stone_id must have 40 characters
+// TestStoneIDLengthInvalid tests that a id must have 40 characters
 func TestStoneIDLengthInvalid(t *testing.T) {
 	d := map[string]interface{}{
-		"stone_id":   "abcd",
-		"stone_type": "coupon",
+		"id":   "abcd",
+		"type": "coupon",
 		"created_at": 1000,
 	}
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
-	expectedMsg := "`meta.stone_id` must have 40 characters. Preferrable a UUIDv4 SHA1 hashed string"
+	expectedMsg := "`meta.id` must have 40 characters. Preferrable a UUIDv4 SHA1 hashed string"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestStoneTypeMustBeString tests that stone_type value type must be string
+// TestStoneTypeMustBeString tests that type value type must be string
 func TestStoneTypeMustBeString(t *testing.T) {
 	d := map[string]interface{}{
-		"stone_id":   Sha1("abcd"),
-		"stone_type": 123,
+		"id":   Sha1("abcd"),
+		"type": 123,
 		"created_at": 1000,
 	}
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
-	expectedMsg := "`meta.stone_type` value type is invalid. Expects string value"
+	expectedMsg := "`meta.type` value type is invalid. Expects a string"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
 // TestCreatedAtMustBeNumber tests that created_at value type must be a number
 func TestCreatedAtMustBeNumber(t *testing.T) {
 	d := map[string]interface{}{
-		"stone_id":   Sha1("abcd"),
-		"stone_type": "coupon",
+		"id":   Sha1("abcd"),
+		"type": "coupon",
 		"created_at": "111",
 	}
 	err := ValidateMetaBlock(d)
 	assert.NotNil(t, err)
-	expectedMsg := "`meta.created_at` value type is invalid. Expects an integer"
+	expectedMsg := "`meta.created_at` value type is invalid. Expects a number"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
 // TestCreatedAtBeforeStartTime test that a created_at time before the start/launch time is invalid
 func TestCreatedAtBeforeStartTime(t *testing.T) {
 	d := map[string]interface{}{
-		"stone_id":   Sha1("abcd"),
-		"stone_type": "coupon",
+		"id":   Sha1("abcd"),
+		"type": "coupon",
 		"created_at": 100000,
 	}
 	err := ValidateMetaBlock(d)
@@ -121,75 +160,6 @@ func TestCreatedAtBeforeStartTime(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestSignaturesBlockHasUnexpectedProperty tests that an error will occur when 
-// `signatures` block contains unexpected property
-func TestSignaturesBlockHasUnexpectedProperty(t *testing.T) {
-	d := map[string]interface{}{
-		"some_property": "abcde",
-	}
-	err := ValidateSignaturesBlock(d)
-	assert.NotNil(t, err)
-	expectedMsg := "`some_property` property is unexpected in `signatures` block"
-	assert.Equal(t, expectedMsg, err.Error())
-}
-
-// TestSignaturesBlockMustHaveMetaProperty test that signatures block must have `meta` property
-func TestSignaturesBlockMustHaveMetaProperty(t *testing.T) {
-	d := map[string]interface{}{}
-	err := ValidateSignaturesBlock(d)
-	assert.NotNil(t, err)
-	expectedMsg := "missing `signatures.meta` property"
-	assert.Equal(t, expectedMsg, err.Error())
-}
-
-// TestMetaSignatureTypeMustBeString test that the signatures.meta property value type is string
-func TestMetaSignatureTypeMustBeString(t *testing.T) {
-	d := map[string]interface{}{
-		"meta": 1234,
-	}
-	err := ValidateSignaturesBlock(d)
-	assert.NotNil(t, err)
-	expectedMsg := "`signatures.meta` value type is invalid. Expects string value"
-	assert.Equal(t, expectedMsg, err.Error())
-}
-
-// TestOwnershipSignatureTypeMustBeString tests that when `ownership` property is set, it's value type must be string
-func TestOwnershipSignatureTypeMustBeString(t *testing.T) {
-	d := map[string]interface{}{
-		"meta":      "abcde",
-		"ownership": 100,
-	}
-	err := ValidateSignaturesBlock(d)
-	assert.NotNil(t, err)
-	expectedMsg := "`signatures.ownership` value type is invalid. Expects string value"
-	assert.Equal(t, expectedMsg, err.Error())
-}
-
-// // TestAttributesSignatureTypeMustBeString tests that when `attributes` 
-// property is set, it's value type must be string
-func TestAttributesSignatureTypeMustBeString(t *testing.T) {
-	d := map[string]interface{}{
-		"meta":       "abcde",
-		"ownership":  "abcde",
-		"attributes": 100,
-	}
-	err := ValidateSignaturesBlock(d)
-	assert.NotNil(t, err)
-	expectedMsg := "`signatures.attributes` value type is invalid. Expects string value"
-	assert.Equal(t, expectedMsg, err.Error())
-}
-
-// TestEmbedsSignatureTypeMustBeString test that the signatures.embeds property value type is string
-func TestEmbedsSignatureTypeMustBeString(t *testing.T) {
-	d := map[string]interface{}{
-		"meta": "abcde",
-		"embeds": 1234,
-	}
-	err := ValidateSignaturesBlock(d)
-	assert.NotNil(t, err)
-	expectedMsg := "`signatures.embeds` value type is invalid. Expects string value"
-	assert.Equal(t, expectedMsg, err.Error())
-}
 
 // TestMetaBlockHasUnexpectedProperty tests that an error occurs when the ownership block
 // contains an unexpected property
@@ -197,17 +167,50 @@ func TestOwnershipBlockHasUnexpectedProperty(t *testing.T) {
 	d := map[string]interface{}{
 		"some_property": "abcde",
 	}
-	err := ValidateOwnershipBlock(d)
+	err := ValidateOwnershipBlock(d, "xxx")
 	assert.NotNil(t, err)
 	expectedMsg := "`some_property` property is unexpected in `ownership` block"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestOwnershipTypePropertyMissing tests that an error occurs when 
-// `ownership` block is set with missing `type` property
-func TestOwnershipTypePropertyMissing(t *testing.T) {
+// TestOwnershipRefIDPropertyMissing test that an error will occur when ownership.ref_id property is missing
+func TestOwnershipRefIDPropertyMissing(t *testing.T) {
 	d := map[string]interface{}{}
-	err := ValidateOwnershipBlock(d)
+	err := ValidateOwnershipBlock(d, "xxx")
+	assert.NotNil(t, err)
+	expectedMsg := "`ownership` block is missing `ref_id` property"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestOwnershipRefIDWithInvalidValueType tests that an error will occur when ownership.ref_id value type is invalid
+func TestOwnershipRefIDWithInvalidValueType(t *testing.T) {
+	d := map[string]interface{}{
+		"ref_id": 123,
+	}
+	err := ValidateOwnershipBlock(d, "xxx")
+	assert.NotNil(t, err)
+	expectedMsg := "`ownership.ref_id` value type is invalid. Expects string value"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestRefIDWithInvalidMetaID tests that an error will occur when ref_id property is not equal to 
+// meta id parameter
+func TestRefIDWithInvalidMetaID(t *testing.T) {
+	d := map[string]interface{}{
+		"ref_id": "xxx",
+	}
+	err := ValidateOwnershipBlock(d, "yyy")
+	assert.NotNil(t, err)
+	expectedMsg := "`ownership.ref_id` not equal to `meta.id`"
+	assert.Equal(t, expectedMsg, err.Error())
+}
+
+// TestOwnershipTypePropertyMissing tests that an error occurs when ownership.type property is missing
+func TestOwnershipTypePropertyMissing(t *testing.T) {
+	d := map[string]interface{}{
+		"ref_id": "xxx",
+	}
+	err := ValidateOwnershipBlock(d, "xxx")
 	assert.NotNil(t, err)
 	expectedMsg := "`ownership` block is missing `type` property"
 	assert.Equal(t, expectedMsg, err.Error())
@@ -217,9 +220,10 @@ func TestOwnershipTypePropertyMissing(t *testing.T) {
 // `ownership.type` is set to an unacceptable value
 func TestInvalidOwnershipTypeValue(t *testing.T) {
 	d := map[string]interface{}{
+		"ref_id": "xxx",
 		"type": "some_value",
 	}
-	err := ValidateOwnershipBlock(d)
+	err := ValidateOwnershipBlock(d, "xxx")
 	assert.NotNil(t, err)
 	expectedMsg := "`ownership.type` property has unexpected value"
 	assert.Equal(t, expectedMsg, err.Error())
@@ -229,9 +233,10 @@ func TestInvalidOwnershipTypeValue(t *testing.T) {
 // `sole` and `ownership.sole` property is missing
 func TestMissingSoleProperty(t *testing.T) {
 	d := map[string]interface{}{
+		"ref_id": "xxx",
 		"type": "sole",
 	}
-	err := ValidateOwnershipBlock(d)
+	err := ValidateOwnershipBlock(d, "xxx")
 	assert.NotNil(t, err)
 	expectedMsg := "`ownership` block is missing `sole` property"
 	assert.Equal(t, expectedMsg, err.Error())
@@ -241,10 +246,11 @@ func TestMissingSoleProperty(t *testing.T) {
 // type is not a map of interface{} value
 func TestInvalidSolePropertyType(t *testing.T) {
 	d := map[string]interface{}{
+		"ref_id": "xxx",
 		"type": "sole",
 		"sole": "abcde",
 	}
-	err := ValidateOwnershipBlock(d)
+	err := ValidateOwnershipBlock(d, "xxx")
 	assert.NotNil(t, err)
 	expectedMsg := "`ownership.sole` value type is invalid. Expects a JSON object"
 	assert.Equal(t, expectedMsg, err.Error())
@@ -254,10 +260,11 @@ func TestInvalidSolePropertyType(t *testing.T) {
 // `ownership.sole` is missing `address_id` property
 func TestSolePropertyMissingAddressIDProperty(t *testing.T) {
 	d := map[string]interface{}{
+		"ref_id": "xxx",
 		"type": "sole",
 		"sole": map[string]interface{}{},
 	}
-	err := ValidateOwnershipBlock(d)
+	err := ValidateOwnershipBlock(d, "xxx")
 	assert.NotNil(t, err)
 	expectedMsg := "`ownership.sole` property is missing `address_id` property"
 	assert.Equal(t, expectedMsg, err.Error())
@@ -267,30 +274,32 @@ func TestSolePropertyMissingAddressIDProperty(t *testing.T) {
 // value type is not string
 func TestInvalidSolePropertyAddressID(t *testing.T) {
 	d := map[string]interface{}{
+		"ref_id": "xxx",
 		"type": "sole",
 		"sole": map[string]interface{}{
 			"address_id": 123,	
 		},
 	}
-	err := ValidateOwnershipBlock(d)
+	err := ValidateOwnershipBlock(d, "xxx")
 	assert.NotNil(t, err)
-	expectedMsg := "`ownership.sole.address_id` value type is invalid. Expects string value"
+	expectedMsg := "`ownership.sole.address_id` value type is invalid. Expects a string"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestInvalidSoleStatusPropertyValueType tests that an error will occur when 
+// TestInvalidOwnershipStatusPropertyValueType tests that an error will occur when 
 // `ownership.status` is set with an invalid value type
-func TestInvalidSoleStatusPropertyValueType(t *testing.T) {
+func TestInvalidOwnershipStatusPropertyValueType(t *testing.T) {
 	d := map[string]interface{}{
+		"ref_id": "xxx",
 		"type": "sole",
 		"sole": map[string]interface{}{
 			"address_id": "abcde",	
 		},
 		"status": 123,
 	}
-	err := ValidateOwnershipBlock(d)
+	err := ValidateOwnershipBlock(d, "xxx")
 	assert.NotNil(t, err)
-	expectedMsg := "`ownership.status` value type is invalid. Expects string value"
+	expectedMsg := "`ownership.status` value type is invalid. Expects a string"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
@@ -298,270 +307,145 @@ func TestInvalidSoleStatusPropertyValueType(t *testing.T) {
 // `ownership.status` is set with an unexpected value
 func TestUnexpectedOwnershipStatusValue(t *testing.T) {
 	d := map[string]interface{}{
+		"ref_id": "xxx",
 		"type": "sole",
 		"sole": map[string]interface{}{
 			"address_id": "abcde",	
 		},
 		"status": "unexpected_value",
 	}
-	err := ValidateOwnershipBlock(d)
+	err := ValidateOwnershipBlock(d, "xxx")
 	assert.NotNil(t, err)
 	expectedMsg := "`ownership.status` property has unexpected value"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestMustHaveMetaBlock tests that a json string must have a `meta` property
-func TestMustHaveMetaBlock(t *testing.T) {
-	var str = `{ "signatures": {}}`
-	err := Validate(str)
+// TestAddAttributesWithUnexpectedProp tests that an error will occur when an attribute 
+// block contain unexpected property
+func TestAttributesWithUnexpectedProp(t *testing.T) {
+	d := map[string]interface{}{
+		"unexpected_key": "some_value",
+	}
+	err := ValidateAttributesBlock(d, "")
 	assert.NotNil(t, err)
-	expectedMsg := "missing `meta` block"
+	expectedMsg := "`unexpected_key` property is unexpected in `attributes` block"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestInvalidMetaValueType tests that the `meta` block/property value type must be a JSON object
-func TestInvalidMetaValueType(t *testing.T) {
-	var str = `{ "meta": "some stuff" }`
-	err := Validate(str)
+// TestAttributesWithMissingRefID tests that an error will occur if
+// attribute block is missing ref id
+func TestAttributesWithMissingRefID(t *testing.T) {
+	d := map[string]interface{}{}
+	err := ValidateAttributesBlock(d, "")
 	assert.NotNil(t, err)
-	expectedMsg := "`meta` block value type is invalid. Expects a JSON object"
+	expectedMsg := "`attributes` block is missing `ref_id` property"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestMustHaveSignatureBlock tests that the json string must have a `signatures` property
-func TestMustHaveSignatureBlock(t *testing.T) {
-	var str = `{ 
-		"meta": { 
-			"stone_id": "` + Sha1("stuff") + `", 
-			"stone_type": "cur", 
-			"created_at": 1453975575 
-		} 
-	}`
-	err := Validate(str)
+// TestAttributesWithWrongRefID tests that an error will occur if
+// attribute.ref_id is not equal to meta id
+func TestAttributesWithWrongRefID(t *testing.T) {
+	d := map[string]interface{}{
+		"ref_id": "xxx",
+	}
+	err := ValidateAttributesBlock(d, "")
 	assert.NotNil(t, err)
-	expectedMsg := "missing `signatures` block"
+	expectedMsg := "`attributes.ref_id` not equal to `meta.id`"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestInvalidSignaturesValueType tests that the `signatures` block/property value type must be a JSON object
-func TestInvalidSignaturesBlockValueType(t *testing.T) {
-	var str = `{ 
-		"signatures": "a_string", 
-		"meta": { 
-			"stone_id": "` + Sha1("stuff") + `", 
-			"stone_type": "cur", 
-			"created_at": 1453975575 
-		} 
-	}`
-	err := Validate(str)
+// TestAttributesWithMissingData tests that an error will occur if
+// attribute.data property is missing
+func TestAttributesWithMissingData(t *testing.T) {
+	d := map[string]interface{}{
+		"ref_id": "xxx",
+	}
+	err := ValidateAttributesBlock(d, "xxx")
 	assert.NotNil(t, err)
-	expectedMsg := "`signature` block value type is invalid. Expects a JSON object"
+	expectedMsg := "`attributes` block is missing `data` property"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestInvalidOwnershipBlockValueType tests that the value type of `ownership block must be a map
-func TestInvalidOwnershipBlockValueType(t *testing.T) {
-	var str = `{ 
-		"signatures": { 
-			"meta": "abcde"
-		}, 
-		"meta": { 
-			"stone_id": "` + Sha1("stuff") + `", 
-			"stone_type": "cur", 
-			"created_at": 1453975575 
-		},
-		"ownership": "abcde"
-	}`
-	err := Validate(str)
+// TestEmbedsWithUnexpectedProp tests that an error will occur if 
+// embeds block contains unexpected property
+func TestEmbedsWithUnexpectedProp(t *testing.T) {
+	d := map[string]interface{}{
+		"unexpected_key": "some_value",
+	}
+	err := ValidateEmbedsBlock(d, "xxx")
 	assert.NotNil(t, err)
-	expectedMsg := "`ownership` block value type is invalid. Expects a JSON object"
+	expectedMsg := "`unexpected_key` property is unexpected in `embeds` block"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestSignaturesBlockMustHaveOwnershipProperty tests that whenever `ownership` block is set,
-// `signatures` block must have `ownership` property
-func TestSignaturesBlockMustHaveOwnershipProperty(t *testing.T) {
-	var str = `{ 
-		"signatures": { 
-			"meta": "abcde"
-		}, 
-		"meta": { 
-			"stone_id": "` + Sha1("stuff") + `", 
-			"stone_type": "cur", 
-			"created_at": 1453975575 
-		},
-		"ownership": { "stuff": "stuff" }
-	}`
-	err := Validate(str)
+// TestEmbedsWithRefIDMissing tests that an error will occur if embeds
+// block is missing ref_id property
+func TestEmbedsWithRefIDMissing(t *testing.T) {
+	d := map[string]interface{}{}
+	err := ValidateEmbedsBlock(d, "xxx")
 	assert.NotNil(t, err)
-	expectedMsg := "missing `ownership` property in `signatures` block"
+	expectedMsg := "`embeds` block is missing `ref_id` property"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestInvalidAttributesBlockValueType tests that the value type of `attributes` block must be a map
-func TestInvalidAttributesBlockValueType(t *testing.T) {
-	var str = `{ 
-		"signatures": { 
-			"meta": "abcde",
-			"ownership": "abcde"
-		}, 
-		"meta": { 
-			"stone_id": "` + Sha1("stuff") + `", 
-			"stone_type": "cur", 
-			"created_at": 1453975575 
-		},
-		"ownership": { 
-			"type": "sole", 
-		"sole": {
-				"address_id": "1234"
-			} 
-		},
-		"attributes": "abcde"
-	}`
-	err := Validate(str)
+// TestEmbedsWithWrongRefID tests that an error will occur if
+// ref_id is not equal to meta id
+func TestEmbedsWithWrongRefID(t *testing.T) {
+	d := map[string]interface{}{
+		"ref_id": "xxx",
+	}
+	err := ValidateEmbedsBlock(d, "yyy")
 	assert.NotNil(t, err)
-	expectedMsg := "`attributes` block value type is invalid. Expects a JSON object"
+	expectedMsg := "`embeds.ref_id` not equal to `meta.id`"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestSignaturesBlockMustHaveAttributesProperty tests that whenever `attributes` block is set,
-// `signatures` block must have `attributes` property
-func TestSignaturesBlockMustHaveAttributesProperty(t *testing.T) {
-	var str = `{ 
-		"signatures": { 
-			"meta": "abcde",
-			"ownership": "abcde"
-		}, 
-		"meta": { 
-			"stone_id": "` + Sha1("stuff") + `", 
-			"stone_type": "cur", 
-			"created_at": 1453975575 
-		},
-		"ownership": { 
-			"type": "sole", 
-			"sole": {
-				"address_id": "1234"
-			}
-		},
-		"attributes": { "stuff": "stuff" }
-	}`
-	err := Validate(str)
+// TestEmbedsWithDataMissing tests that an error will occur if data property
+// is missing
+func TestEmbedsWithDataMissing(t *testing.T) {
+	d := map[string]interface{}{
+		"ref_id": "xxx",
+	}
+	err := ValidateEmbedsBlock(d, "xxx")
 	assert.NotNil(t, err)
-	expectedMsg := "missing `attributes` property in `signatures` block"
+	expectedMsg := "`embeds` block is missing `data` property"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-// TestInvalidEmbedsValueType tests that an error will occur if `embeds` block value type is not a
-// slice of objects
-func TestInvalidEmbedsValueType(t *testing.T) {
-	var str = `{ 
-		"signatures": { 
-			"meta": "abcde",
-			"ownership": "abcde",
-			"attributes": "abcde"
-		}, 
-		"meta": { 
-			"stone_id": "` + Sha1("stuff") + `", 
-			"stone_type": "cur", 
-			"created_at": 1453975575 
-		},
-		"ownership": { 
-			"type": "sole", 
-			"sole": {
-				"address_id": "1234"
-			}
-		},
-		"attributes": { "stuff": "stuff" },
-		"embeds": "abcdef"
-	}`
-	err := Validate(str)
+// TestEmbedsWithInvalidDataValueType that an error will occur if data 
+// property has invalid value type
+func TestEmbedsWithInvalidDataValueType(t *testing.T) {
+	d := map[string]interface{}{
+		"ref_id": "xxx",
+		"data": 123,
+	}
+	err := ValidateEmbedsBlock(d, "xxx")
 	assert.NotNil(t, err)
-	expectedMsg := "`embeds` block value type is invalid. Expects a list of only JSON objects"
+	expectedMsg := "`embeds.data` value type is invalid. Expects a slice of JSON objects"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-
-// TestNoErrorEmptyEmbedsBlock tests that no error will occur if `embeds` block 
-// is set to an empty slice
-func TestNoErrorEmptyEmbedsBlock(t *testing.T) {
-	var str = `{ 
-		"signatures": { 
-			"meta": "abcde",
-			"ownership": "abcde",
-			"attributes": "abcde"
-		}, 
-		"meta": { 
-			"stone_id": "` + Sha1("stuff") + `", 
-			"stone_type": "cur", 
-			"created_at": 1453975575 
+// TestIgnoreChildEmbedsOfEmbeds tests that child embeds are not validated
+func TestIgnoreChildEmbedsOfEmbeds(t *testing.T) {
+	d := map[string]interface{}{
+		"ref_id": "xxx",
+		"data": []interface{}{
+			map[string]interface{}{
+				"meta": map[string]interface{}{
+					"id": NewID(),
+					"type": "coupon",
+					"created_at": time.Now().Unix(),
+				},
+				"embeds": map[string]interface{}{
+					"ref_id": "xxx",
+					"data": "*invalid_type*",
+				},
+			},
 		},
-		"ownership": { 
-			"type": "sole", 
-			"sole": {
-				"address_id": "1234"
-			}
-		},
-		"attributes": { "stuff": "stuff" },
-		"embeds": []
-	}`
-	err := Validate(str)
+	}
+	err := ValidateEmbedsBlock(d, "xxx")
 	assert.Nil(t, err)
-}
-
-// TestEmbedsBlockWithInvalidStone tests that an error will occur when the `embeds` block contains
-// an invalid stone 
-func TestEmbedsBlockWithInvalidStone(t *testing.T) {
-	var str = `{ 
-		"signatures": { 
-			"meta": "abcde",
-			"ownership": "abcde",
-			"attributes": "abcde",
-			"embeds": "abcde"
-		}, 
-		"meta": { 
-			"stone_id": "` + Sha1("stuff") + `", 
-			"stone_type": "cur", 
-			"created_at": 1453975575 
-		},
-		"ownership": { 
-			"type": "sole", 
-			"sole": {
-				"address_id": "1234"
-			}
-		},
-		"attributes": { "stuff": "stuff" },
-		"embeds": [{ }]
-	}`
-	err := Validate(str)
-	assert.NotNil(t, err)
-	expectedMsg := "unable to validate embed at index 0. Reason: missing `meta` block"
-	assert.Equal(t, expectedMsg, err.Error())
-}
-
-// TestIgnoreDeeperEmbedsLevel test that the validator will not validate nested embeds
-// other that the ones in the stone been validated
-func TestIgnoreDeeperEmbedsLevel(t *testing.T) {
-	var str = `{ 
-		"signatures": { 
-			"meta": "abcde",
-			"ownership": "abcde",
-			"attributes": "abcde",
-			"embeds": "abcde"
-		}, 
-		"meta": { 
-			"stone_id": "` + Sha1("stuff") + `", 
-			"stone_type": "cur", 
-			"created_at": 1453975575 
-		},
-		"ownership": { 
-			"type": "sole", 
-			"sole": {
-				"address_id": "1234"
-			}
-		},
-		"attributes": { "stuff": "stuff" },
-		"embeds": [{"signatures":{"meta":"abcde","ownership":"abcde"},"meta":{"created_at":1454443443,"stone_id":"4417781906fb0a89c295959b0df01782dbc4dc9f","stone_type":"currency"},"ownership":{"type":"sole","sole":{"address_id":"abcde"},"status":"transferred"},"embeds":[{ "invalid": "embed" }],"attributes":{}}]
-	}`
-	err := Validate(str)
-	assert.Nil(t, err)
+	childEmbed := d["data"].([]interface{})[0].(map[string]interface{})
+	assert.NotNil(t, childEmbed["embeds"])
+	assert.NotNil(t, childEmbed["embeds"].(map[string]interface{})["data"])
 }
