@@ -194,7 +194,7 @@ func(self *Stone) Encode() string {
 	return crypto.ToBase64([]byte(signaturesStr))
 }
 
-// Assign and sign a valid meta value to the meta block
+// Add meta block. Validation and block signing are carried out
 func(self *Stone) AddMeta(meta map[string]interface{}, issuerPrivateKey string) error {
 
 	// validate meta
@@ -213,16 +213,16 @@ func(self *Stone) AddMeta(meta map[string]interface{}, issuerPrivateKey string) 
     return nil
 }
 
-// Assign and sign a valid ownership data to the ownership block
+// Assign and sign a valid ownership data to the ownership block.
+// `meta.id` property must be set. 
 func (self *Stone) AddOwnership(ownership map[string]interface{}, issuerPrivateKey string) error {
 
-	var metaID = ""
-	if self.Meta["id"] != nil {
-		metaID = self.Meta["id"].(string)
+	if self.Meta["id"] == nil || (self.Meta["id"] != nil && strings.TrimSpace(self.Meta["id"].(string)) == "") {
+		return errors.New("meta.id is not set")
 	}
 
 	// validate 
-	if err := ValidateOwnershipBlock(ownership, metaID); err != nil {
+	if err := ValidateOwnershipBlock(ownership, self.Meta["id"].(string)); err != nil {
     	return err
     }
 
@@ -237,16 +237,16 @@ func (self *Stone) AddOwnership(ownership map[string]interface{}, issuerPrivateK
 	return nil
 }
 
-// Assign a attribute data to the attributes bloc
+// Assign and sign a valid attribute data to the attributes block.
+// `meta.id` property must be set. 
 func (self *Stone) AddAttributes(attributes map[string]interface{}, issuerPrivateKey string) error {
 	
-	var metaID = ""
-	if self.Meta["id"] != nil {
-		metaID = self.Meta["id"].(string)
+	if self.Meta["id"] == nil || (self.Meta["id"] != nil && strings.TrimSpace(self.Meta["id"].(string)) == "") {
+		return errors.New("meta.id is not set")
 	}
 
 	// validate 
-	if err := ValidateAttributesBlock(attributes, metaID); err != nil {
+	if err := ValidateAttributesBlock(attributes, self.Meta["id"].(string)); err != nil {
     	return err
     }
 
@@ -262,19 +262,18 @@ func (self *Stone) AddAttributes(attributes map[string]interface{}, issuerPrivat
 }
 
 // add a stone to the `embeds` block
-func (self *Stone) AddEmbed(stone *Stone, issuerPrivateKey string) error {
+func (self *Stone) AddEmbed(embeds map[string]interface{}, issuerPrivateKey string) error {
 
-	var metaID = ""
-	if self.Meta["id"] != nil {
-		metaID = self.Meta["id"].(string)
+	if self.Meta["id"] == nil || (self.Meta["id"] != nil && strings.TrimSpace(self.Meta["id"].(string)) == "") {
+		return errors.New("meta.id is not set")
 	}
 
 	// validate 
-	if err := ValidateEmbedsBlock(, metaID); err != nil {
+	if err := ValidateEmbedsBlock(embeds, self.Meta["id"].(string)); err != nil {
     	return err
     }
 
-	self.Embeds = append(self.Embeds, stone.ToMap())
+	self.Embeds = embeds
 
 	// sign block
 	_, err := self.Sign("embeds", issuerPrivateKey)

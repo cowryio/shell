@@ -117,10 +117,20 @@ func TestAddMeta(t *testing.T) {
 	assert.NotNil(t, sh.Signatures["meta"])
 }
 
+// TestAddOwnershipWithUnsetMetaID tests that an error will occur when attempting 
+// to set ownership to a stone with no meta id
+func TestAddOwnershipWithUnsetMetaID(t *testing.T) {
+	var ownership = map[string]interface{}{}
+	sh := Empty()
+	err := sh.AddOwnership(ownership, ReadFromFixtures("rsa_priv_1.txt"))
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "meta.id is not set")
+}
+
 // TestAddOwnership tests that the `ownership` block is assigned and signed successfully
 func TestAddOwnership(t *testing.T) {
 	var ownership = map[string]interface{}{
-		"ref_id": "",
+		"ref_id": "xxx",
 		"type": "sole",
    		"sole": map[string]interface{}{
    			"address_id": "abcde",
@@ -128,65 +138,104 @@ func TestAddOwnership(t *testing.T) {
    		"status": "transferred",
 	}
 	sh := Empty()
+	sh.Meta["id"] = "xxx"
 	err := sh.AddOwnership(ownership, ReadFromFixtures("rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	assert.Equal(t, sh.Ownership["type"], ownership["type"])
 	assert.NotNil(t, sh.Signatures["ownership"])
 }
 
+
 // TestAddOwnership tests that the `attributes` block is assigned and signed successfully
 func TestAddAttributes(t *testing.T) {
 	var attrs = map[string]interface{}{
-		"some_data": "some_value",
+		"ref_id": "xxx",
+		"data": "abc",
 	}
 	sh := Empty()
+	sh.Meta["id"] = "xxx"
 	err := sh.AddAttributes(attrs, ReadFromFixtures("rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	assert.Equal(t, sh.Attributes["some_data"], attrs["some_data"])
 	assert.NotNil(t, sh.Signatures["attributes"])
 }
 
-// // TestAddEmbed tests that a stone object can be embeded into 
-// // another stone with no error and is also signed
-// func TestAddEmbed(t *testing.T) {
-// 	sh := NewValidStone()
-// 	embed := NewValidStone()
-// 	sh.AddEmbed(embed, ReadFromFixtures("rsa_priv_1.txt"))
-// 	expectedSignature, err := sh.Sign("embeds", ReadFromFixtures("rsa_priv_1.txt"))
-// 	assert.Nil(t, err)
-// 	assert.Equal(t, len(sh.Embeds), 1)
-// 	assert.Exactly(t, sh.Embeds[0], embed.ToMap())
-// 	assert.NotNil(t, sh.Signatures["embeds"])
-// 	assert.Equal(t, sh.Signatures["embeds"], expectedSignature)
-// }
+// TestAddEmbed tests that the `embeds` block is assigned and signed successfully
+func TestAddEmbed(t *testing.T) {
+
+	sh := NewValidStone()
+
+	embeds := map[string]interface{}{
+		"ref_id": sh.Meta["id"],
+		"data": []interface{}{
+			map[string]interface{}{
+				"meta": map[string]interface{}{
+					"id": NewID(),
+					"type": "coupon",
+					"created_at": time.Now().Unix(),
+				},
+			},
+		},
+	}
+
+	err := sh.AddEmbed(embeds, ReadFromFixtures("rsa_priv_1.txt"))
+	assert.Nil(t, err)
+	assert.Equal(t, sh.Embeds["ref_id"], embeds["ref_id"])
+	assert.NotNil(t, sh.Signatures["embeds"])
+}
+
+// TestHasEmbedsTrue tests that a stone has it's embeds
+// block set
+func TestHasEmbedsTrue(t *testing.T) {
+
+	sh := NewValidStone()
+
+	embeds := map[string]interface{}{
+		"ref_id": sh.Meta["id"],
+		"data": []interface{}{
+			map[string]interface{}{
+				"meta": map[string]interface{}{
+					"id": NewID(),
+					"type": "coupon",
+					"created_at": time.Now().Unix(),
+				},
+			},
+		},
+	}
+
+	assert.Equal(t, sh.HasEmbeds(), false)
+	err := sh.AddEmbed(embeds, ReadFromFixtures("rsa_priv_1.txt"))
+	assert.Nil(t, err)
+	assert.Equal(t, sh.HasEmbeds(), true)
+}
 
 // TestHashSignature tests that an attribute does not or has a signature
 func TestHashSignature(t *testing.T) {
 	var attrs = map[string]interface{}{
-		"some_data": "some_value",
+		"ref_id": "xxx",
+		"data": "abc",
 	}
 	sh := Empty()
+	sh.Meta["id"] = "xxx"
 	assert.Equal(t, sh.HasSignature("attributes"), false)
-	assert.Equal(t, sh.HasSignature("ownership"), false)
 	err := sh.AddAttributes(attrs, ReadFromFixtures("rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	assert.Equal(t, sh.HasSignature("attributes"), true)
-	assert.Equal(t, sh.HasSignature("ownership"), false)
 }
 
 // TestCallVerifyWithUnknownBlockName tests that an error will occur when verifying an unknown block
-func TestCallVerifyWithUnknownBlockName(t *testing.T) {
-	var attrs = map[string]interface{}{
-		"some_data": "some_value",
-	}
-	sh := Empty()
-	err := sh.AddAttributes(attrs, ReadFromFixtures("rsa_priv_1.txt"))
-	assert.Nil(t, err)
-	err = sh.Verify("some_block", ReadFromFixtures("rsa_pub_1.txt"))
-	assert.NotNil(t, err)
-	expectedMsg := "block unknown"
-	assert.Equal(t, expectedMsg, err.Error())
-}
+// func TestCallVerifyWithUnknownBlockName(t *testing.T) {
+// 	var attrs = map[string]interface{}{
+// 		"some_data": "some_value",
+// 	}
+// 	sh := Empty()
+// 	err := sh.AddAttributes(attrs, ReadFromFixtures("rsa_priv_1.txt"))
+// 	assert.Nil(t, err)
+// 	err = sh.Verify("some_block", ReadFromFixtures("rsa_pub_1.txt"))
+// 	assert.NotNil(t, err)
+// 	expectedMsg := "block unknown"
+// 	assert.Equal(t, expectedMsg, err.Error())
+// }
 
 // TestCallVerifyWithInvalidPublicKey tests that an error will occur when verifying with an invalid public key
 // func TestCallVerifyWithInvalidPublicKey(t *testing.T) {
@@ -315,7 +364,7 @@ func TestHasAttributesReturnsTrue(t *testing.T) {
 	stone, err := LoadJSON(ReadFromFixtures("stone_1.json"))
 	assert.Nil(t, err)
 	var attrs = map[string]interface{}{
-		"ref_id": "4417781906fb0a89c295959b0df01782dbc4dc9f",
+		"ref_id": stone.Meta["id"],
 		"data": "some_value",
 	}
 	err = stone.AddAttributes(attrs, ReadFromFixtures("rsa_priv_1.txt"))
@@ -329,21 +378,6 @@ func TestHasAttributesReturnsFalse(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, stone.HasAttributes(), false)
 }
-
-// TestHasEmbedsReturnsTrue tests that a stone has embeds information
-func TestHasEmbedsReturnsTrue(t *testing.T) {
-	sh := NewValidStone()
-	embed := NewValidStone()
-	err := sh.AddEmbed(embed, ReadFromFixtures("rsa_priv_1.txt"))
-	assert.Nil(t, err)
-	assert.Equal(t, sh.HasEmbeds(), true)
-}
-
-// // TestHasEmbedsFalse tests that a stone has no embeds information
-// func TestHasEmbedsFalse(t *testing.T) {
-// 	sh := NewValidStone()
-// 	assert.Equal(t, sh.HasEmbeds(), false)
-// }
 
 func TestEncodeSuccessfully(t *testing.T) {
 	stoneID := NewID()
