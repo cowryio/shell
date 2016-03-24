@@ -14,7 +14,7 @@ go get github.com/ellcrys/stone
 
 # Example
 
-```golang
+```Go
 import (
    Stone "github.com/ellcrys/stone"
 )
