@@ -224,32 +224,25 @@ func TestHashSignature(t *testing.T) {
 }
 
 // TestCallVerifyWithUnknownBlockName tests that an error will occur when verifying an unknown block
-// func TestCallVerifyWithUnknownBlockName(t *testing.T) {
-// 	var attrs = map[string]interface{}{
-// 		"some_data": "some_value",
-// 	}
-// 	sh := Empty()
-// 	err := sh.AddAttributes(attrs, ReadFromFixtures("rsa_priv_1.txt"))
-// 	assert.Nil(t, err)
-// 	err = sh.Verify("some_block", ReadFromFixtures("rsa_pub_1.txt"))
-// 	assert.NotNil(t, err)
-// 	expectedMsg := "block unknown"
-// 	assert.Equal(t, expectedMsg, err.Error())
-// }
+func TestCallVerifyWithUnknownBlockName(t *testing.T) {
+	stone, err := LoadJSON(ReadFromFixtures("stone_2.json"));
+	assert.Nil(t, err)
+	err = stone.Verify("some_block", ReadFromFixtures("rsa_pub_1.txt"))
+	assert.NotNil(t, err)
+	expectedMsg := "block unknown"
+	assert.Equal(t, expectedMsg, err.Error())
+}
 
 // TestCallVerifyWithInvalidPublicKey tests that an error will occur when verifying with an invalid public key
-// func TestCallVerifyWithInvalidPublicKey(t *testing.T) {
-// 	var attrs = map[string]interface{}{
-// 		"some_data": "some_value",
-// 	}
-// 	sh := Empty()
-// 	err := sh.AddAttributes(attrs, ReadFromFixtures("rsa_priv_1.txt"))
-// 	assert.Nil(t, err)
-// 	err = sh.Verify("attributes", ReadFromFixtures("rsa_invalid_1.txt"))
-// 	assert.NotNil(t, err)
-// 	expectedMsg := `Public Key Error: unsupported key type "KEY"`
-// 	assert.Equal(t, expectedMsg, err.Error())
-// }
+func TestCallVerifyWithInvalidPublicKey(t *testing.T) {
+	stone, err := LoadJSON(ReadFromFixtures("stone_2.json"));
+	assert.Nil(t, err)
+	stone.Sign("meta", ReadFromFixtures("rsa_priv_1.txt"))
+	err = stone.Verify("attributes", ReadFromFixtures("rsa_invalid_1.txt"))
+	assert.NotNil(t, err)
+	expectedMsg := `Public Key Error: unsupported key type "KEY"`
+	assert.Equal(t, expectedMsg, err.Error())
+}
 
 
 // TestCallVerifyOnBlockWithNoSignature tests that an error will occur when verifying a block with no signature
@@ -379,10 +372,10 @@ func TestHasAttributesReturnsFalse(t *testing.T) {
 	assert.Equal(t, stone.HasAttributes(), false)
 }
 
+// TestEncodeSuccessfully tests that a stone was encoded successfully
 func TestEncodeSuccessfully(t *testing.T) {
-	stoneID := NewID()
 	var meta = map[string]interface{}{
-		"id": stoneID,
+		"id": NewID(),
 		"type": "currency",
 		"created_at": time.Now().Unix(),
 	}
@@ -391,4 +384,69 @@ func TestEncodeSuccessfully(t *testing.T) {
 	enc, _ := MapToJSON(sh.Signatures)
 	expectedEncodeVal := crypto.ToBase64([]byte(enc))
 	assert.Equal(t, sh.Encode(), expectedEncodeVal)
+}
+
+// TestTokenToBlockSuccessfully tests that a JWS token is successfully decoded to a block
+func TestTokenToBlockSuccessfully(t *testing.T) {
+	var meta = map[string]interface{}{
+		"id": NewID(),
+		"type": "currency",
+		"created_at": time.Now().Unix(),
+	}
+	sh, err := Create(meta, ReadFromFixtures("rsa_priv_1.txt"))
+	assert.Nil(t, err)
+	block, err := TokenToBlock(sh.Signatures["meta"].(string), "meta")
+	assert.Nil(t, err)
+	assert.Equal(t, meta["id"], block["id"])
+}
+
+// TestTokenToBlockWithInvalidToken test that an error occurs if token is invalid
+func TestTokenToBlockWithInvalidToken(t *testing.T) {
+	_, err := TokenToBlock("abcde", "meta")
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "parameter is not a valid token")
+}
+
+// TestTokenToBlockWithInvalidPayload tests that an error occurs if payload part of the
+// token is invalid
+func TestTokenToBlockWithInvalidPayload(t *testing.T) {
+	_, err := TokenToBlock("abcde.invalid_**payload.xyz", "meta")
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "invalid meta token")
+}
+
+// TestTokenToBlockWithMalformedJSONInPayload test that an error occurs if payload data is malformed
+func TestTokenToBlockWithMalformedJSONInPayload(t *testing.T) {
+	malformedJSONPayload := crypto.ToBase64([]byte(`{ "field": "value" `))
+	_, err := TokenToBlock("abcde."+malformedJSONPayload+".xyz", "meta")
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "malformed meta block")
+}
+
+// TestDecodeWithUnSignedBlocks test that an empty block is derived after decoding 
+// an encoded stone that had not signed it's blocks prior to encoding.
+func TestDecodeWithUnSignedBlocks(t *testing.T) {
+	sh, err := Load(ReadFromFixtures("stone_5.json"))
+	assert.Nil(t, err)
+	encStone := sh.Encode()
+	decStone, err := Decode(encStone)
+	assert.Nil(t, err)
+	assert.Equal(t, len(decStone.Meta), 0)
+	assert.Equal(t, len(decStone.Ownership), 0)
+	assert.Equal(t, len(decStone.Attributes), 0)
+	assert.Equal(t, len(decStone.Embeds), 0)
+	assert.Equal(t, len(decStone.Signatures), 0)
+}
+
+// TestDecodeWithSignedBlock tests that a encoded stone blocks will be decoded
+// correctly as long as blocks where signed before the encoding process was run.
+func TestDecodeWithSignedBlock(t *testing.T) {
+	sh, err := Load(ReadFromFixtures("stone_5.json"))
+	assert.Nil(t, err)
+	sh.Sign("meta", ReadFromFixtures("rsa_priv_1.txt"))
+	encStone := sh.Encode()
+	decStone, err := Decode(encStone)
+	assert.Nil(t, err)
+	assert.NotEqual(t, len(decStone.Meta), 0)
+	assert.Exactly(t, sh.Meta, decStone.Meta)
 }

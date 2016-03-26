@@ -118,6 +118,106 @@ func LoadJSON(jsonStr string) (*Stone, error) {
 	return loadMap(data)  
 }
 
+// Decode a base64 encoded stone token
+func Decode(encStone string) (*Stone, error) {
+
+	var stone = Empty()
+
+	// decode encoded token to get the signatures
+	sigJSON, err := crypto.FromBase64Raw(encStone)
+	if err != nil {
+		return &Stone{}, errors.New("failed to decode token")
+	}
+
+	// convert json to map
+	stoneMap, err := JSONToMap(sigJSON)
+	if err != nil {
+		return &Stone{}, errors.New("failed to parse token")
+	}
+
+	// parse and load meta block
+	if IsStringValue(stoneMap["meta"]) && stoneMap["meta"].(string) != "" {
+
+		var token = stoneMap["meta"].(string);
+
+		block, err := TokenToBlock(token, "meta")
+		if err != nil {
+			return stone, err
+		}
+
+		stone.Meta = block
+		stone.Signatures["meta"] = token
+	}
+
+	// parse and load ownership block
+	if IsStringValue(stoneMap["ownership"]) && stoneMap["ownership"].(string) != "" {
+
+		var token = stoneMap["ownership"].(string);
+
+		block, err := TokenToBlock(token, "ownership")
+		if err != nil {
+			return stone, err
+		}
+
+		stone.Ownership = block
+		stone.Signatures["ownership"] = token
+	}
+
+	// parse and load ownership block
+	if IsStringValue(stoneMap["attributes"]) && stoneMap["attributes"].(string) != "" {
+
+		var token = stoneMap["attributes"].(string);
+
+		block, err := TokenToBlock(token, "attributes")
+		if err != nil {
+			return stone, err
+		}
+
+		stone.Attributes = block
+		stone.Signatures["attributes"] = token
+	}
+
+	// parse and load embeds block
+	if IsStringValue(stoneMap["embeds"]) && stoneMap["embeds"].(string) != "" {
+
+		var token = stoneMap["embeds"].(string);
+
+		block, err := TokenToBlock(token, "embeds")
+		if err != nil {
+			return stone, err
+		}
+
+		stone.Embeds = block
+		stone.Signatures["embeds"] = token
+	}	
+
+	return stone, nil
+}
+
+// Decodes a payload of a JWS token to a block
+func TokenToBlock(token string, blockName string) (map[string]interface{}, error) {
+
+	var block = map[string]interface{}{}
+
+	var payload, err = GetJWSPayload(token)
+	if err != nil {
+		return block, err
+	}
+	
+	blockJSON, err := crypto.FromBase64Raw(payload)
+	if err != nil {
+		return block, errors.New("invalid "+blockName+" token")
+	}
+
+	block, err = JSONToMap(blockJSON)
+	if err != nil {
+		return block, errors.New("malformed "+blockName+" block")
+	}
+
+	return block, nil
+}
+
+
 // get a block or panic of block is unknown
 func(self *Stone) getBlock(name string) map[string]interface{} {
 	if name == "meta" { return self.Meta }

@@ -1,0 +1,30 @@
+{
+    "meta": {
+        "created_at": 1453975575,
+        "id": "4417781906fb0a89c295959b0df01782dbc4dc9f",
+        "type": "currency"
+    },
+    "ownership": {
+    	"ref_id": "4417781906fb0a89c295959b0df01782dbc4dc9f",
+    	"type": "sole",
+    	"sole": {
+    		"address_id": "47sh2gs564dhgd5538djgd562"
+    	}
+	},
+    "attributes": {
+    	"ref_id": "4417781906fb0a89c295959b0df01782dbc4dc9f",
+    	"data": "some_value"
+	},
+    "embeds": {
+    	"ref_id": "4417781906fb0a89c295959b0df01782dbc4dc9f",
+    	"data": [
+    		{
+    			"meta": {
+			        "created_at": 1453975575,
+			        "id": "4417781906fb0a89c295959b0df01782dbc4dc9b",
+			        "type": "currency"
+			    }
+    		}
+    	]	
+	}
+}

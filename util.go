@@ -247,3 +247,12 @@ func ReadFromFixtures(path string) string {
 	dat, _ := ioutil.ReadFile(absPath)
 	return string(dat)
 }
+
+// Get the encoded payload from a JWS token
+func GetJWSPayload(token string) (string, error) {
+	var parts = strings.Split(token, ".")
+	if len(parts) != 3 {
+		return "", errors.New("parameter is not a valid token")
+	}
+	return parts[1], nil
+}
