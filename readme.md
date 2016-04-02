@@ -255,5 +255,4 @@ func main(){
 
 # Other Methods
 
-
 See [GoDoc](https://godoc.org/github.com/ellcrys/stone) for full documentation

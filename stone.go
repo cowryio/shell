@@ -261,10 +261,10 @@ func(self *Stone) Sign(blockName string, privateKey string) (string, error) {
 }
 
 
-// Verify a block. 
-func(self *Stone) Verify(blockName, issuerPublicKey string) error {
+// Verify a block. Using the public of the signer
+func(self *Stone) Verify(blockName, signerPublicKey string) error {
 
-	signer, err := crypto.ParsePublicKey([]byte(issuerPublicKey))
+	signer, err := crypto.ParsePublicKey([]byte(signerPublicKey))
 	if err != nil {
 		return errors.New(fmt.Sprintf("Public Key Error: %v", err))
 	}
@@ -276,13 +276,13 @@ func(self *Stone) Verify(blockName, issuerPublicKey string) error {
 
 	// ensure block has signature
 	if !self.HasSignature(blockName) {
-		return errors.New("block `"+blockName+"` has no signature")
+		return errors.New("`"+blockName+"` block has no signature")
 	}
 
 	// verify
 	_, err = signer.JWS_RSA_Verify(self.Signatures[blockName].(string))
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("`%s` block signature could not be verified", blockName))
 	}
 
 	return nil

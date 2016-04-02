@@ -251,7 +251,7 @@ func TestCallVerifyOnBlockWithNoSignature(t *testing.T) {
 	sh := Empty()
 	err := sh.Verify("attributes", ReadFromFixtures("rsa_pub_1.txt"))
 	assert.NotNil(t, err)
-	expectedMsg := "block `attributes` has no signature"
+	expectedMsg := "`attributes` block has no signature"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
@@ -263,7 +263,7 @@ func TestCallVerifyWhenBlockSignatureIsMalformed(t *testing.T) {
 	sh.Signatures["attributes"] = "abcdefaa9*"
 	err := sh.Verify("attributes", ReadFromFixtures("rsa_pub_1.txt"))
 	assert.NotNil(t, err)
-	expectedMsg := "invalid signature"
+	expectedMsg := "`attributes` block signature could not be verified"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
@@ -275,7 +275,7 @@ func TestCallVerifyWhenBlockSignatureInvalid(t *testing.T) {
 	sh.Signatures["attributes"] = tamperedSig
 	err := sh.Verify("attributes", ReadFromFixtures("rsa_pub_1.txt"))
 	assert.NotNil(t, err)
-	expectedMsg := "invalid signature"
+	expectedMsg := "`attributes` block signature could not be verified"
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
