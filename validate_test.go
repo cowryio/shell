@@ -1,8 +1,11 @@
 package stone
 
-import "testing"
-import "time"
-import "github.com/stretchr/testify/assert"
+import (
+	"testing"
+	"time"
+	"github.com/stretchr/testify/assert"
+	"github.com/ellcrys/util"
+)
 
 // TestInvalidJSON tests that an invalid json string returns an error
 func TestInvalidJSON(t *testing.T) {
@@ -17,7 +20,7 @@ func TestInvalidJSON(t *testing.T) {
 func TestValidateWithMap(t *testing.T) {
 	s := map[string]interface{}{
 		"meta": map[string]interface{}{
-			"id": NewID(),
+			"id": util.NewID(),
 			"type": "coupon",
 			"created_at": time.Now().Unix(),
 		},
@@ -124,7 +127,7 @@ func TestStoneIDLengthInvalid(t *testing.T) {
 // TestStoneTypeMustBeString tests that type value type must be string
 func TestStoneTypeMustBeString(t *testing.T) {
 	d := map[string]interface{}{
-		"id":   Sha1("abcd"),
+		"id":   util.Sha1("abcd"),
 		"type": 123,
 		"created_at": 1000,
 	}
@@ -137,7 +140,7 @@ func TestStoneTypeMustBeString(t *testing.T) {
 // TestCreatedAtMustBeNumber tests that created_at value type must be a number
 func TestCreatedAtMustBeNumber(t *testing.T) {
 	d := map[string]interface{}{
-		"id":   Sha1("abcd"),
+		"id":   util.Sha1("abcd"),
 		"type": "coupon",
 		"created_at": "111",
 	}
@@ -150,7 +153,7 @@ func TestCreatedAtMustBeNumber(t *testing.T) {
 // TestCreatedAtBeforeStartTime test that a created_at time before the start/launch time is invalid
 func TestCreatedAtBeforeStartTime(t *testing.T) {
 	d := map[string]interface{}{
-		"id":   Sha1("abcd"),
+		"id":   util.Sha1("abcd"),
 		"type": "coupon",
 		"created_at": 100000,
 	}
@@ -432,7 +435,7 @@ func TestIgnoreChildEmbedsOfEmbeds(t *testing.T) {
 		"data": []interface{}{
 			map[string]interface{}{
 				"meta": map[string]interface{}{
-					"id": NewID(),
+					"id": util.NewID(),
 					"type": "coupon",
 					"created_at": time.Now().Unix(),
 				},

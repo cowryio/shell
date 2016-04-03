@@ -8,6 +8,7 @@ import (
 	"strings"
 	"fmt"
 	"github.com/ellcrys/crypto"
+	"github.com/ellcrys/util"
 )
 
 // known block names
@@ -105,7 +106,7 @@ func Load(stoneStr string) (*Stone, error) {
 // it to a map and then used to load a new stone instance
 func LoadJSON(jsonStr string) (*Stone, error) {
 
-	data, err := JSONToMap(jsonStr)
+	data, err := util.JSONToMap(jsonStr)
 	if err != nil{
         return &Stone{}, err;
     }
@@ -130,13 +131,13 @@ func Decode(encStone string) (*Stone, error) {
 	}
 
 	// convert json to map
-	stoneMap, err := JSONToMap(sigJSON)
+	stoneMap, err := util.JSONToMap(sigJSON)
 	if err != nil {
 		return &Stone{}, errors.New("failed to parse token")
 	}
 
 	// parse and load meta block
-	if IsStringValue(stoneMap["meta"]) && stoneMap["meta"].(string) != "" {
+	if util.IsStringValue(stoneMap["meta"]) && stoneMap["meta"].(string) != "" {
 
 		var token = stoneMap["meta"].(string);
 
@@ -150,7 +151,7 @@ func Decode(encStone string) (*Stone, error) {
 	}
 
 	// parse and load ownership block
-	if IsStringValue(stoneMap["ownership"]) && stoneMap["ownership"].(string) != "" {
+	if util.IsStringValue(stoneMap["ownership"]) && stoneMap["ownership"].(string) != "" {
 
 		var token = stoneMap["ownership"].(string);
 
@@ -164,7 +165,7 @@ func Decode(encStone string) (*Stone, error) {
 	}
 
 	// parse and load ownership block
-	if IsStringValue(stoneMap["attributes"]) && stoneMap["attributes"].(string) != "" {
+	if util.IsStringValue(stoneMap["attributes"]) && stoneMap["attributes"].(string) != "" {
 
 		var token = stoneMap["attributes"].(string);
 
@@ -178,7 +179,7 @@ func Decode(encStone string) (*Stone, error) {
 	}
 
 	// parse and load embeds block
-	if IsStringValue(stoneMap["embeds"]) && stoneMap["embeds"].(string) != "" {
+	if util.IsStringValue(stoneMap["embeds"]) && stoneMap["embeds"].(string) != "" {
 
 		var token = stoneMap["embeds"].(string);
 
@@ -199,7 +200,7 @@ func TokenToBlock(token string, blockName string) (map[string]interface{}, error
 
 	var block = map[string]interface{}{}
 
-	var payload, err = GetJWSPayload(token)
+	var payload, err = util.GetJWSPayload(token)
 	if err != nil {
 		return block, err
 	}
@@ -209,7 +210,7 @@ func TokenToBlock(token string, blockName string) (map[string]interface{}, error
 		return block, errors.New("invalid "+blockName+" token")
 	}
 
-	block, err = JSONToMap(blockJSON)
+	block, err = util.JSONToMap(blockJSON)
 	if err != nil {
 		return block, errors.New("malformed "+blockName+" block")
 	}
@@ -240,17 +241,17 @@ func(self *Stone) Sign(blockName string, privateKey string) (string, error) {
 	}
 
 	// block name must be known
-	if !InStringSlice(KnownBlockNames, blockName) {
+	if !util.InStringSlice(KnownBlockNames, blockName) {
 		return "", errors.New("block unknown")
 	}
 
 	block = self.getBlock(blockName)
-	if IsMapEmpty(block) {
+	if util.IsMapEmpty(block) {
 		return "", errors.New("failed to sign empty block")
 	}
 
 	// sign block
-	payload, _ := MapToJSON(block)
+	payload, _ := util.MapToJSON(block)
 	signature, err := signer.JWS_RSA_Sign(payload)
 	if err != nil {
 		return "", errors.New("failed to sign block")
@@ -270,7 +271,7 @@ func(self *Stone) Verify(blockName, signerPublicKey string) error {
 	}
 
 	// block name must be known
-	if !InStringSlice(KnownBlockNames, blockName) {
+	if !util.InStringSlice(KnownBlockNames, blockName) {
 		return errors.New("block unknown")
 	}
 
@@ -290,7 +291,7 @@ func(self *Stone) Verify(blockName, signerPublicKey string) error {
 
 // Encode a base64 url equivalent of the signatures.
 func(self *Stone) Encode() string {
-	var signaturesStr, _ = MapToJSON(self.Signatures)
+	var signaturesStr, _ = util.MapToJSON(self.Signatures)
 	return crypto.ToBase64([]byte(signaturesStr))
 }
 

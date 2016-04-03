@@ -1,11 +1,14 @@
 // Contains validation method for stone
 package stone
 
-import "errors"
-import "encoding/json"
-import "fmt"
-import "strings"
-import "time"
+import (
+	"errors"
+	"encoding/json"
+	"fmt"
+	"strings"
+	"time"
+	"github.com/ellcrys/util"
+)
 
 // the unix time that indicates the time from when
 // a meta.created_at time must start from
@@ -32,7 +35,7 @@ func ValidateMetaBlock(meta map[string]interface{}) error {
 	// must reject unexpected properties
 	accetableProps := []string{ "id", "type", "created_at" } 
 	for prop, _ := range meta {
-		if !InStringSlice(accetableProps, prop) {
+		if !util.InStringSlice(accetableProps, prop) {
 			return errors.New(fmt.Sprintf("`%s` property is unexpected in `meta` block", prop))
 		}
 	}
@@ -40,13 +43,13 @@ func ValidateMetaBlock(meta map[string]interface{}) error {
 	// must have expected properties
 	props := []string{"id", "type", "created_at"}
 	for _, prop := range props {
-		if !HasKey(meta, prop) {
+		if !util.HasKey(meta, prop) {
 			return errors.New(fmt.Sprintf("`meta` block is missing `%s` property", prop))
 		} 
 	}
 
 	// stone id must be a string
-	if !IsStringValue(meta["id"]) {
+	if !util.IsStringValue(meta["id"]) {
 		return errors.New("`meta.id` value type is invalid. Expects a string")
 	}
 
@@ -56,17 +59,17 @@ func ValidateMetaBlock(meta map[string]interface{}) error {
 	}
 	
 	// type must be string
-	if !IsStringValue(meta["type"]) {
+	if !util.IsStringValue(meta["type"]) {
 		return errors.New("`meta.type` value type is invalid. Expects a string")
 	}
 
 	// created_at must be a json number or a float or integer
-	if !IsJSONNumber(meta["created_at"]) && !IsNumberValue(meta["created_at"]) {
+	if !util.IsJSONNumber(meta["created_at"]) && !util.IsNumberValue(meta["created_at"]) {
 		return errors.New("`meta.created_at` value type is invalid. Expects a number")
 	}
 
 	// created_at is json.Number, convert to int64
-	if IsJSONNumber(meta["created_at"]) {
+	if util.IsJSONNumber(meta["created_at"]) {
 		createdAt, err = meta["created_at"].(json.Number).Int64()
 		if err != nil {
 			return errors.New("`meta.created_at` value type is invalid. Expects a number")
@@ -74,13 +77,13 @@ func ValidateMetaBlock(meta map[string]interface{}) error {
 	}
 
 	// created_at is an integer
-	if IsInt(meta["created_at"]) {
-		createdAt = ToInt64(meta["created_at"])
+	if util.IsInt(meta["created_at"]) {
+		createdAt = util.ToInt64(meta["created_at"])
 	}
 	
 	// make time objects
-	createdAtTime := UnixToTime(createdAt)
-	startTime := UnixToTime(START_TIME)
+	createdAtTime := util.UnixToTime(createdAt)
+	startTime := util.UnixToTime(START_TIME)
 
 	// date of creation cannot be before the start time
 	if createdAtTime.Before(startTime) {
@@ -106,7 +109,7 @@ func ValidateSignaturesBlock(signatures map[string]interface{}) error {
 	// must reject unexpected properties
 	accetableProps := []string{ "meta", "ownership", "attributes", "embeds" } 
 	for prop, _ := range signatures {
-		if !InStringSlice(accetableProps, prop) {
+		if !util.InStringSlice(accetableProps, prop) {
 			return errors.New(fmt.Sprintf("`%s` property is unexpected in `signatures` block", prop))
 		}
 	}
@@ -116,28 +119,28 @@ func ValidateSignaturesBlock(signatures map[string]interface{}) error {
 		return errors.New("missing `signatures.meta` property")
 	} else {
 		// meta value type must be string
-		if !IsStringValue(signatures["meta"]) {
+		if !util.IsStringValue(signatures["meta"]) {
 			return errors.New("`signatures.meta` value type is invalid. Expects a string")
 		}
 	}
 
 	// if signature has `ownership` property, it's value type must be string
 	if signatures["ownership"] != nil {
-		if !IsStringValue(signatures["ownership"]) {
+		if !util.IsStringValue(signatures["ownership"]) {
 			return errors.New("`signatures.ownership` value type is invalid. Expects a string")
 		}
 	}
 
 	// if signature has `attributes` property, it's value type must be string
 	if signatures["attributes"] != nil {
-		if !IsStringValue(signatures["attributes"]) {
+		if !util.IsStringValue(signatures["attributes"]) {
 			return errors.New("`signatures.attributes` value type is invalid. Expects a string")
 		}
 	}
 
 	// if signature has `embeds` property, it's value type must be string
 	if signatures["embeds"] != nil {
-		if !IsStringValue(signatures["embeds"]) {
+		if !util.IsStringValue(signatures["embeds"]) {
 			return errors.New("`signatures.embeds` value type is invalid. Expects a string")
 		}
 	}
@@ -162,7 +165,7 @@ func ValidateOwnershipBlock(ownership map[string]interface{}, metaID string) err
 	// must reject unexpected properties
 	accetableProps := []string{ "ref_id", "type", "sole", "status" } 
 	for prop, _ := range ownership {
-		if !InStringSlice(accetableProps, prop) {
+		if !util.InStringSlice(accetableProps, prop) {
 			return errors.New(fmt.Sprintf("`%s` property is unexpected in `ownership` block", prop))
 		}
 	}
@@ -173,7 +176,7 @@ func ValidateOwnershipBlock(ownership map[string]interface{}, metaID string) err
 	}
 
 	// `ref_id` property must be a string value
-	if !IsStringValue(ownership["ref_id"]) {
+	if !util.IsStringValue(ownership["ref_id"]) {
 		return errors.New("`ownership.ref_id` value type is invalid. Expects string value")
 	}
 
@@ -188,13 +191,13 @@ func ValidateOwnershipBlock(ownership map[string]interface{}, metaID string) err
 	}
 
 	// type property must have string value
-	if !IsStringValue(ownership["type"]) {
+	if !util.IsStringValue(ownership["type"]) {
 		return errors.New("`ownership.type` value type is invalid. Expects a string")
 	}
 	
 	// type property value must be known
 	acceptableValues := []string{"sole"}
-	if !InStringSlice(acceptableValues, ownership["type"].(string)) {
+	if !util.InStringSlice(acceptableValues, ownership["type"].(string)) {
 		return errors.New("`ownership.type` property has unexpected value")
 	}
 
@@ -204,7 +207,7 @@ func ValidateOwnershipBlock(ownership map[string]interface{}, metaID string) err
 	} else {
 
 		// `sole` property must be a map
-		if !IsMapOfAny(ownership["sole"]) {
+		if !util.IsMapOfAny(ownership["sole"]) {
 			return errors.New("`ownership.sole` value type is invalid. Expects a JSON object")
 		}
 
@@ -215,7 +218,7 @@ func ValidateOwnershipBlock(ownership map[string]interface{}, metaID string) err
 		}
 
 		// `sole.address_id` value type must be string
-		if !IsStringValue(soleProperty["address_id"]) {
+		if !util.IsStringValue(soleProperty["address_id"]) {
 			return errors.New("`ownership.sole.address_id` value type is invalid. Expects a string")
 		}
 	}
@@ -223,10 +226,10 @@ func ValidateOwnershipBlock(ownership map[string]interface{}, metaID string) err
 	// `status` property is optional, but if set, it's type must be string 
 	// and must have acceptable values
 	if ownership["status"] != nil {
-		if !IsStringValue(ownership["status"]) {
+		if !util.IsStringValue(ownership["status"]) {
 			return errors.New("`ownership.status` value type is invalid. Expects a string")
 		}
-		if !InStringSlice([]string{ "transferred" }, ownership["status"].(string)) {
+		if !util.InStringSlice([]string{ "transferred" }, ownership["status"].(string)) {
 			return errors.New("`ownership.status` property has unexpected value")
 		}
 	}
@@ -245,7 +248,7 @@ func ValidateAttributesBlock(attributes map[string]interface{}, metaID string) e
 
 	// must reject unexpected properties
 	for prop, _ := range attributes {
-		if !InStringSlice([]string{ "ref_id", "data" }, prop) {
+		if !util.InStringSlice([]string{ "ref_id", "data" }, prop) {
 			return errors.New(fmt.Sprintf("`%s` property is unexpected in `attributes` block", prop))
 		}
 	}
@@ -256,7 +259,7 @@ func ValidateAttributesBlock(attributes map[string]interface{}, metaID string) e
 	}
 
 	// `ref_id` property must be a string value
-	if !IsStringValue(attributes["ref_id"]) {
+	if !util.IsStringValue(attributes["ref_id"]) {
 		return errors.New("`attributes.ref_id` value type is invalid. Expects string value")
 	}
 
@@ -285,7 +288,7 @@ func ValidateEmbedsBlock(embeds map[string]interface{}, metaID string) error {
 
 	// must reject unexpected properties
 	for prop, _ := range embeds {
-		if !InStringSlice([]string{ "ref_id", "data" }, prop) {
+		if !util.InStringSlice([]string{ "ref_id", "data" }, prop) {
 			return errors.New(fmt.Sprintf("`%s` property is unexpected in `embeds` block", prop))
 		}
 	}
@@ -296,7 +299,7 @@ func ValidateEmbedsBlock(embeds map[string]interface{}, metaID string) error {
 	}
 
 	// `ref_id` property must be a string value
-	if !IsStringValue(embeds["ref_id"]) {
+	if !util.IsStringValue(embeds["ref_id"]) {
 		return errors.New("`embeds.ref_id` value type is invalid. Expects string value")
 	}
 
@@ -311,7 +314,7 @@ func ValidateEmbedsBlock(embeds map[string]interface{}, metaID string) error {
 	}
 
 	// `data` property must be a map
-	if !IsSlice(embeds["data"]) || !ContainsOnlyMapType(embeds["data"].([]interface{})) {
+	if !util.IsSlice(embeds["data"]) || !util.ContainsOnlyMapType(embeds["data"].([]interface{})) {
 		return errors.New("`embeds.data` value type is invalid. Expects a slice of JSON objects")
 	}
 
@@ -370,7 +373,7 @@ func Validate(stoneData interface{}) error {
     if data["meta"] == nil {
     	return errors.New("missing `meta` block")
     } else {
-		if !IsMapOfAny(data["meta"]) {
+		if !util.IsMapOfAny(data["meta"]) {
 			return errors.New("`meta` block value type is invalid. Expects a JSON object")
 		}
 		if  err := ValidateMetaBlock(data["meta"].(map[string]interface{})); err != nil {
@@ -382,10 +385,10 @@ func Validate(stoneData interface{}) error {
 
     // if `ownership` block exists, it must be a map
     if data["ownership"] != nil {
-    	if !IsMapOfAny(data["ownership"]) {
+    	if !util.IsMapOfAny(data["ownership"]) {
     		return errors.New("`ownership` block value type is invalid. Expects a JSON object")
     	} 
-		if !IsMapEmpty(data["ownership"].(map[string]interface{})) {
+		if !util.IsMapEmpty(data["ownership"].(map[string]interface{})) {
     		if err := ValidateOwnershipBlock(data["ownership"].(map[string]interface{}), metaID); err != nil {
 				return err
 			}
@@ -394,10 +397,10 @@ func Validate(stoneData interface{}) error {
 
     // if `attributes` block exists, it must be a map
     if data["attributes"] != nil {
-    	if !IsMapOfAny(data["attributes"]) {
+    	if !util.IsMapOfAny(data["attributes"]) {
     		return errors.New("`attributes` block value type is invalid. Expects a JSON object")
     	}
-		if !IsMapEmpty(data["attributes"].(map[string]interface{})) {
+		if !util.IsMapEmpty(data["attributes"].(map[string]interface{})) {
     		if err := ValidateAttributesBlock(data["attributes"].(map[string]interface{}), metaID); err != nil {
 				return err
 			}
@@ -406,10 +409,10 @@ func Validate(stoneData interface{}) error {
 
     // if `embeds` block exists, it must be a map
     if data["embeds"] != nil {
-    	if !IsMapOfAny(data["embeds"]) {
+    	if !util.IsMapOfAny(data["embeds"]) {
     		return errors.New("`embeds` block value type is invalid. Expects a JSON object")
     	}
-    	if !IsMapEmpty(data["embeds"].(map[string]interface{})) {
+    	if !util.IsMapEmpty(data["embeds"].(map[string]interface{})) {
     		if err := ValidateEmbedsBlock(data["embeds"].(map[string]interface{}), metaID); err != nil {
 				return err
 			}

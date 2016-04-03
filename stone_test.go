@@ -5,27 +5,28 @@ import (
 	"time"
 	"github.com/stretchr/testify/assert"
 	"github.com/ellcrys/crypto"
+	"github.com/ellcrys/util"
 )
 
 func NewValidStone() *Stone {
 	var meta = map[string]interface{}{
-		"id": NewID(),
+		"id": util.NewID(),
 		"type": "some_stone",
 		"created_at": time.Now().Unix(),
 	}
-	sh, _ := Create(meta, ReadFromFixtures("rsa_priv_1.txt"))
+	sh, _ := Create(meta, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	return sh
 } 
 
 // TestCreateAStone create a valid, error free stone
 func TestCreateAStone(t *testing.T) {
-	stoneID := NewID()
+	stoneID := util.NewID()
 	var meta = map[string]interface{}{
 		"id": stoneID,
 		"type": "currency",
 		"created_at": time.Now().Unix(),
 	}
-	sh, err := Create(meta, ReadFromFixtures("rsa_priv_1.txt"))
+	sh, err := Create(meta, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	assert.Equal(t, sh.Meta["id"], stoneID)
 	assert.NotEmpty(t, sh.Signatures["meta"])
@@ -33,15 +34,15 @@ func TestCreateAStone(t *testing.T) {
 
 // TestMustProvideMetaWithContent test that a map describing the `meta` block is required
 func TestMustProvideMetaWithContent(t *testing.T) {
-	_, err := Create(make(map[string]interface{}), ReadFromFixtures("rsa_priv_1.txt"))
+	_, err := Create(make(map[string]interface{}), util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "`meta` block is missing `id` property")
 }
 
 // TestInvalidPrivateKey tests that an invalid private key returns an error
 func TestInvalidPrivateKey(t *testing.T) {
-	var issuerPrivateKey = ReadFromFixtures("rsa_invalid_1.txt")
-	stoneID := NewID()
+	var issuerPrivateKey = util.ReadFromFixtures("tests/fixtures/rsa_invalid_1.txt")
+	stoneID := util.NewID()
 	var meta = map[string]interface{}{
 		"id": stoneID,
 		"type": "currency",
@@ -62,7 +63,7 @@ func TestCantLoadMalformedJSON(t *testing.T) {
 
 // TestLoadJSON tests that a valid stone json string can be loaded into a stone object
 func TestLoadJSON(t *testing.T) {
-	txt := ReadFromFixtures("stone_1.json")
+	txt := util.ReadFromFixtures("tests/fixtures/stone_1.json")
 	stone, err := LoadJSON(txt)
 	assert.Nil(t, err);
 	assert.IsType(t, &Stone{}, stone)
@@ -70,11 +71,11 @@ func TestLoadJSON(t *testing.T) {
 
 // TestCorrectlySignMeta tests that a stone is correctly signed
 func TestCorrectlySignMeta(t *testing.T) {
-	txt := ReadFromFixtures("stone_1.json")
+	txt := util.ReadFromFixtures("tests/fixtures/stone_1.json")
 	stone, err := LoadJSON(txt)
 	assert.Nil(t, err);
 	expectedSignature := "eyJhbGciOiJSUzI1NiIsImp3ayI6eyJrdHkiOiJSU0EiLCJuIjoicTZHWW5qZ0tQYkxYSC1rZW5sbjZPZFZRcnl2SEMzVFV1ZS01dnh5QlRwaEhkUWc0djd1Mm9CczZYb1RRSVI2YS1UVlkwR2VFM3ZpakVaX1VwNlZDdG9YUEhWRk51VDBLSmJEaE1IajFVTmZJUnpTdUdOaWJ6bVAzX0NnanRvWWEwdXJyai1ubm5hWjBuYnBVdFRseDB5LW1jVUpnWGZSZDk0QzAtZ1JFUjBNIiwiZSI6IkFRQUIifX0.eyJjcmVhdGVkX2F0IjoxNDUzOTc1NTc1LCJpZCI6IjQ0MTc3ODE5MDZmYjBhODljMjk1OTU5YjBkZjAxNzgyZGJjNGRjOWYiLCJ0eXBlIjoiY3VycmVuY3kifQ.pEBlRBlIkmrMNJkBlvUWo5FK8N6-G83hirDNQLmYo6ojSkX0cXqak_mdHo7zUyLV0CxAvPuxb9fiYbz4S2tllIMpHm_RHQDDOXkl1ykiUrbcotrlfQmiOqvDzp91IL38m8Uy8-MBg-JB7K9nacCCLEph-BLn83AyyQeSVTQZGKo"
-	signature, err := stone.Sign("meta", ReadFromFixtures("rsa_priv_1.txt"))
+	signature, err := stone.Sign("meta", util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	assert.Equal(t, expectedSignature, signature)
 	assert.Equal(t, expectedSignature, stone.Signatures["meta"])
@@ -82,10 +83,10 @@ func TestCorrectlySignMeta(t *testing.T) {
 
 // TestCannotSignUnknownBlock tests that an error will occur when attempting to sign an unknown block
 func TestCannotSignUnknownBlock(t *testing.T) {
-	txt := ReadFromFixtures("stone_1.json")
+	txt := util.ReadFromFixtures("tests/fixtures/stone_1.json")
 	stone, err := LoadJSON(txt)
 	assert.Nil(t, err)
-	_, err = stone.Sign("unknown_block", ReadFromFixtures("rsa_priv_1.txt"))
+	_, err = stone.Sign("unknown_block", util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.NotNil(t, err)
 	expectedMsg := "block unknown"
 	assert.Equal(t, err.Error(), expectedMsg)
@@ -93,10 +94,10 @@ func TestCannotSignUnknownBlock(t *testing.T) {
 
 // TestCannotSignEmptyBlock tests that an error will occur when attempting to sign an empty block
 func TestCannotSignEmptyBlock(t *testing.T) {
-	txt := ReadFromFixtures("stone_1.json")
+	txt := util.ReadFromFixtures("tests/fixtures/stone_1.json")
 	stone, err := LoadJSON(txt)
 	assert.Nil(t, err)
-	_, err = stone.Sign("ownership", ReadFromFixtures("rsa_priv_1.txt"))
+	_, err = stone.Sign("ownership", util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.NotNil(t, err)
 	expectedMsg := "failed to sign empty block"
 	assert.Equal(t, err.Error(), expectedMsg)
@@ -104,14 +105,14 @@ func TestCannotSignEmptyBlock(t *testing.T) {
 
 // TestAddMeta tests that a `meta` block can be assigned and signed successful
 func TestAddMeta(t *testing.T) {
-	stoneID := NewID()
+	stoneID := util.NewID()
 	var meta = map[string]interface{}{
 		"id": stoneID,
 		"type": "currency",
 		"created_at": time.Now().Unix(),
 	}
 	sh := Empty()
-	err := sh.AddMeta(meta, ReadFromFixtures("rsa_priv_1.txt"))
+	err := sh.AddMeta(meta, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	assert.Equal(t, sh.Meta["id"], meta["id"])
 	assert.NotNil(t, sh.Signatures["meta"])
@@ -122,7 +123,7 @@ func TestAddMeta(t *testing.T) {
 func TestAddOwnershipWithUnsetMetaID(t *testing.T) {
 	var ownership = map[string]interface{}{}
 	sh := Empty()
-	err := sh.AddOwnership(ownership, ReadFromFixtures("rsa_priv_1.txt"))
+	err := sh.AddOwnership(ownership, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "meta.id is not set")
 }
@@ -139,7 +140,7 @@ func TestAddOwnership(t *testing.T) {
 	}
 	sh := Empty()
 	sh.Meta["id"] = "xxx"
-	err := sh.AddOwnership(ownership, ReadFromFixtures("rsa_priv_1.txt"))
+	err := sh.AddOwnership(ownership, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	assert.Equal(t, sh.Ownership["type"], ownership["type"])
 	assert.NotNil(t, sh.Signatures["ownership"])
@@ -154,7 +155,7 @@ func TestAddAttributes(t *testing.T) {
 	}
 	sh := Empty()
 	sh.Meta["id"] = "xxx"
-	err := sh.AddAttributes(attrs, ReadFromFixtures("rsa_priv_1.txt"))
+	err := sh.AddAttributes(attrs, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	assert.Equal(t, sh.Attributes["some_data"], attrs["some_data"])
 	assert.NotNil(t, sh.Signatures["attributes"])
@@ -170,7 +171,7 @@ func TestAddEmbed(t *testing.T) {
 		"data": []interface{}{
 			map[string]interface{}{
 				"meta": map[string]interface{}{
-					"id": NewID(),
+					"id": util.NewID(),
 					"type": "coupon",
 					"created_at": time.Now().Unix(),
 				},
@@ -178,7 +179,7 @@ func TestAddEmbed(t *testing.T) {
 		},
 	}
 
-	err := sh.AddEmbed(embeds, ReadFromFixtures("rsa_priv_1.txt"))
+	err := sh.AddEmbed(embeds, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	assert.Equal(t, sh.Embeds["ref_id"], embeds["ref_id"])
 	assert.NotNil(t, sh.Signatures["embeds"])
@@ -195,7 +196,7 @@ func TestHasEmbedsTrue(t *testing.T) {
 		"data": []interface{}{
 			map[string]interface{}{
 				"meta": map[string]interface{}{
-					"id": NewID(),
+					"id": util.NewID(),
 					"type": "coupon",
 					"created_at": time.Now().Unix(),
 				},
@@ -204,7 +205,7 @@ func TestHasEmbedsTrue(t *testing.T) {
 	}
 
 	assert.Equal(t, sh.HasEmbeds(), false)
-	err := sh.AddEmbed(embeds, ReadFromFixtures("rsa_priv_1.txt"))
+	err := sh.AddEmbed(embeds, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	assert.Equal(t, sh.HasEmbeds(), true)
 }
@@ -218,16 +219,16 @@ func TestHashSignature(t *testing.T) {
 	sh := Empty()
 	sh.Meta["id"] = "xxx"
 	assert.Equal(t, sh.HasSignature("attributes"), false)
-	err := sh.AddAttributes(attrs, ReadFromFixtures("rsa_priv_1.txt"))
+	err := sh.AddAttributes(attrs, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	assert.Equal(t, sh.HasSignature("attributes"), true)
 }
 
 // TestCallVerifyWithUnknownBlockName tests that an error will occur when verifying an unknown block
 func TestCallVerifyWithUnknownBlockName(t *testing.T) {
-	stone, err := LoadJSON(ReadFromFixtures("stone_2.json"));
+	stone, err := LoadJSON(util.ReadFromFixtures("tests/fixtures/stone_2.json"));
 	assert.Nil(t, err)
-	err = stone.Verify("some_block", ReadFromFixtures("rsa_pub_1.txt"))
+	err = stone.Verify("some_block", util.ReadFromFixtures("tests/fixtures/rsa_pub_1.txt"))
 	assert.NotNil(t, err)
 	expectedMsg := "block unknown"
 	assert.Equal(t, expectedMsg, err.Error())
@@ -235,10 +236,10 @@ func TestCallVerifyWithUnknownBlockName(t *testing.T) {
 
 // TestCallVerifyWithInvalidPublicKey tests that an error will occur when verifying with an invalid public key
 func TestCallVerifyWithInvalidPublicKey(t *testing.T) {
-	stone, err := LoadJSON(ReadFromFixtures("stone_2.json"));
+	stone, err := LoadJSON(util.ReadFromFixtures("tests/fixtures/stone_2.json"));
 	assert.Nil(t, err)
-	stone.Sign("meta", ReadFromFixtures("rsa_priv_1.txt"))
-	err = stone.Verify("attributes", ReadFromFixtures("rsa_invalid_1.txt"))
+	stone.Sign("meta", util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
+	err = stone.Verify("attributes", util.ReadFromFixtures("tests/fixtures/rsa_invalid_1.txt"))
 	assert.NotNil(t, err)
 	expectedMsg := `Public Key Error: unsupported key type "KEY"`
 	assert.Equal(t, expectedMsg, err.Error())
@@ -249,7 +250,7 @@ func TestCallVerifyWithInvalidPublicKey(t *testing.T) {
 // in the signatures block
 func TestCallVerifyOnBlockWithNoSignature(t *testing.T) {
 	sh := Empty()
-	err := sh.Verify("attributes", ReadFromFixtures("rsa_pub_1.txt"))
+	err := sh.Verify("attributes", util.ReadFromFixtures("tests/fixtures/rsa_pub_1.txt"))
 	assert.NotNil(t, err)
 	expectedMsg := "`attributes` block has no signature"
 	assert.Equal(t, expectedMsg, err.Error())
@@ -261,7 +262,7 @@ func TestCallVerifyOnBlockWithNoSignature(t *testing.T) {
 func TestCallVerifyWhenBlockSignatureIsMalformed(t *testing.T) {
 	sh := Empty()
 	sh.Signatures["attributes"] = "abcdefaa9*"
-	err := sh.Verify("attributes", ReadFromFixtures("rsa_pub_1.txt"))
+	err := sh.Verify("attributes", util.ReadFromFixtures("tests/fixtures/rsa_pub_1.txt"))
 	assert.NotNil(t, err)
 	expectedMsg := "`attributes` block signature could not be verified"
 	assert.Equal(t, expectedMsg, err.Error())
@@ -273,7 +274,7 @@ func TestCallVerifyWhenBlockSignatureInvalid(t *testing.T) {
 	sh := Empty()
 	tamperedSig := "enWGZSZIifX0.eyJjVycmVuY3kifQ.pEBlIL38m8Uy8-Ko"
 	sh.Signatures["attributes"] = tamperedSig
-	err := sh.Verify("attributes", ReadFromFixtures("rsa_pub_1.txt"))
+	err := sh.Verify("attributes", util.ReadFromFixtures("tests/fixtures/rsa_pub_1.txt"))
 	assert.NotNil(t, err)
 	expectedMsg := "`attributes` block signature could not be verified"
 	assert.Equal(t, expectedMsg, err.Error())
@@ -282,46 +283,46 @@ func TestCallVerifyWhenBlockSignatureInvalid(t *testing.T) {
 // TestVerifyMeta tests that a meta block signed with a private key is 
 // successfully verified using the corresponding public key
 func TestVerifyMeta(t *testing.T) {
-	stone, err := LoadJSON(ReadFromFixtures("stone_2.json"));
+	stone, err := LoadJSON(util.ReadFromFixtures("tests/fixtures/stone_2.json"));
 	assert.Nil(t, err)
-	stone.Sign("meta", ReadFromFixtures("rsa_priv_1.txt"))
-	err = stone.Verify("meta", ReadFromFixtures("rsa_pub_1.txt"))
+	stone.Sign("meta", util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
+	err = stone.Verify("meta", util.ReadFromFixtures("tests/fixtures/rsa_pub_1.txt"))
 	assert.Nil(t, err)
 }
 
 // TestVerifyOwnership tests that an ownership block signed with a private key is 
 // successfully verified using the corresponding public key
 func TestVerifyOwnership(t *testing.T) {
-	stone, err := LoadJSON(ReadFromFixtures("stone_2.json"));
+	stone, err := LoadJSON(util.ReadFromFixtures("tests/fixtures/stone_2.json"));
 	assert.Nil(t, err)
-	stone.Sign("ownership", ReadFromFixtures("rsa_priv_1.txt"))
-	err = stone.Verify("ownership", ReadFromFixtures("rsa_pub_1.txt"))
+	stone.Sign("ownership", util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
+	err = stone.Verify("ownership", util.ReadFromFixtures("tests/fixtures/rsa_pub_1.txt"))
 	assert.Nil(t, err)
 }
 
 // TestVerifyAttributes tests that an `attributes` block signed with a private key is 
 // successfully verified using the corresponding public key
 func TestVerifyAttributes(t *testing.T) {
-	stone, err := LoadJSON(ReadFromFixtures("stone_2.json"));
+	stone, err := LoadJSON(util.ReadFromFixtures("tests/fixtures/stone_2.json"));
 	assert.Nil(t, err)
-	stone.Sign("attributes", ReadFromFixtures("rsa_priv_1.txt"))
-	err = stone.Verify("attributes", ReadFromFixtures("rsa_pub_1.txt"))
+	stone.Sign("attributes", util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
+	err = stone.Verify("attributes", util.ReadFromFixtures("tests/fixtures/rsa_pub_1.txt"))
 	assert.Nil(t, err)
 }
 
 // TestVerifyEmbeds tests that an `embeds` block signed with a private key is 
 // successfully verified using the corresponding public key
 func TestVerifyEmbeds(t *testing.T) {
-	stone, err := LoadJSON(ReadFromFixtures("stone_4.json"));
+	stone, err := LoadJSON(util.ReadFromFixtures("tests/fixtures/stone_4.json"));
 	assert.Nil(t, err)
-	stone.Sign("embeds", ReadFromFixtures("rsa_priv_1.txt"))
-	err = stone.Verify("embeds", ReadFromFixtures("rsa_pub_1.txt"))
+	stone.Sign("embeds", util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
+	err = stone.Verify("embeds", util.ReadFromFixtures("tests/fixtures/rsa_pub_1.txt"))
 	assert.Nil(t, err)
 }
 
 // TestCloneStone
 func TestCloneStone(t *testing.T) {
-	stone, err := LoadJSON(ReadFromFixtures("stone_2.json"));
+	stone, err := LoadJSON(util.ReadFromFixtures("tests/fixtures/stone_2.json"));
 	assert.Nil(t, err)
 	clone := stone.Clone()
 	assert.Exactly(t, stone, clone) 
@@ -331,14 +332,14 @@ func TestCloneStone(t *testing.T) {
 
 // TestHasOwnershipFalse tests that a stone does not have any ownership information
 func TestHasOwnershipFalse(t *testing.T) {
-	stone, err := LoadJSON(ReadFromFixtures("stone_1.json"));
+	stone, err := LoadJSON(util.ReadFromFixtures("tests/fixtures/stone_1.json"));
 	assert.Nil(t, err)
 	assert.Equal(t, stone.HasOwnership(), false)
 }
 
 // TestHasOwnershipTrue tests that a stone has ownership information
 func TestHasOwnershipTrue(t *testing.T) {
-	stone, err := LoadJSON(ReadFromFixtures("stone_1.json"));
+	stone, err := LoadJSON(util.ReadFromFixtures("tests/fixtures/stone_1.json"));
 	assert.Nil(t, err)
 	var ownership = map[string]interface{}{
 		"ref_id": "4417781906fb0a89c295959b0df01782dbc4dc9f",
@@ -347,27 +348,27 @@ func TestHasOwnershipTrue(t *testing.T) {
 			"address_id": "abcde",
    		},
 	}
-	err = stone.AddOwnership(ownership, ReadFromFixtures("rsa_priv_1.txt"))
+	err = stone.AddOwnership(ownership, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	assert.Equal(t, stone.HasOwnership(), true)
 }
 
 // TestHasAttributesReturnsTrue tests that a stone has attributes information
 func TestHasAttributesReturnsTrue(t *testing.T) {
-	stone, err := LoadJSON(ReadFromFixtures("stone_1.json"))
+	stone, err := LoadJSON(util.ReadFromFixtures("tests/fixtures/stone_1.json"))
 	assert.Nil(t, err)
 	var attrs = map[string]interface{}{
 		"ref_id": stone.Meta["id"],
 		"data": "some_value",
 	}
-	err = stone.AddAttributes(attrs, ReadFromFixtures("rsa_priv_1.txt"))
+	err = stone.AddAttributes(attrs, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	assert.Equal(t, stone.HasAttributes(), true)
 }
 
 // TestHasAttributesReturnsFalse tests that a stone does not have attributes information
 func TestHasAttributesReturnsFalse(t *testing.T) {
-	stone, err := LoadJSON(ReadFromFixtures("stone_1.json"))
+	stone, err := LoadJSON(util.ReadFromFixtures("tests/fixtures/stone_1.json"))
 	assert.Nil(t, err)
 	assert.Equal(t, stone.HasAttributes(), false)
 }
@@ -375,13 +376,13 @@ func TestHasAttributesReturnsFalse(t *testing.T) {
 // TestEncodeSuccessfully tests that a stone was encoded successfully
 func TestEncodeSuccessfully(t *testing.T) {
 	var meta = map[string]interface{}{
-		"id": NewID(),
+		"id": util.NewID(),
 		"type": "currency",
 		"created_at": time.Now().Unix(),
 	}
-	sh, err := Create(meta, ReadFromFixtures("rsa_priv_1.txt"))
+	sh, err := Create(meta, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.Nil(t, err)
-	enc, _ := MapToJSON(sh.Signatures)
+	enc, _ := util.MapToJSON(sh.Signatures)
 	expectedEncodeVal := crypto.ToBase64([]byte(enc))
 	assert.Equal(t, sh.Encode(), expectedEncodeVal)
 }
@@ -389,11 +390,11 @@ func TestEncodeSuccessfully(t *testing.T) {
 // TestTokenToBlockSuccessfully tests that a JWS token is successfully decoded to a block
 func TestTokenToBlockSuccessfully(t *testing.T) {
 	var meta = map[string]interface{}{
-		"id": NewID(),
+		"id": util.NewID(),
 		"type": "currency",
 		"created_at": time.Now().Unix(),
 	}
-	sh, err := Create(meta, ReadFromFixtures("rsa_priv_1.txt"))
+	sh, err := Create(meta, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	block, err := TokenToBlock(sh.Signatures["meta"].(string), "meta")
 	assert.Nil(t, err)
@@ -426,7 +427,7 @@ func TestTokenToBlockWithMalformedJSONInPayload(t *testing.T) {
 // TestDecodeWithUnSignedBlocks test that an empty block is derived after decoding 
 // an encoded stone that had not signed it's blocks prior to encoding.
 func TestDecodeWithUnSignedBlocks(t *testing.T) {
-	sh, err := Load(ReadFromFixtures("stone_5.json"))
+	sh, err := Load(util.ReadFromFixtures("tests/fixtures/stone_5.json"))
 	assert.Nil(t, err)
 	encStone := sh.Encode()
 	decStone, err := Decode(encStone)
@@ -441,9 +442,9 @@ func TestDecodeWithUnSignedBlocks(t *testing.T) {
 // TestDecodeWithSignedBlock tests that a encoded stone blocks will be decoded
 // correctly as long as blocks where signed before the encoding process was run.
 func TestDecodeWithSignedBlock(t *testing.T) {
-	sh, err := Load(ReadFromFixtures("stone_5.json"))
+	sh, err := Load(util.ReadFromFixtures("tests/fixtures/stone_5.json"))
 	assert.Nil(t, err)
-	sh.Sign("meta", ReadFromFixtures("rsa_priv_1.txt"))
+	sh.Sign("meta", util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	encStone := sh.Encode()
 	decStone, err := Decode(encStone)
 	assert.Nil(t, err)
