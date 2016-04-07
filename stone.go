@@ -292,7 +292,7 @@ func(self *Stone) Verify(blockName, signerPublicKey string) error {
 // Encode a base64 url equivalent of the signatures.
 func(self *Stone) Encode() string {
 	var signaturesStr, _ = util.MapToJSON(self.Signatures)
-	return crypto.ToBase64([]byte(signaturesStr))
+	return crypto.ToBase64Raw([]byte(signaturesStr))
 }
 
 // Add meta block. Validation and block signing are carried out
