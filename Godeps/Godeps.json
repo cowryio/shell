@@ -1,18 +1,34 @@
 {
 	"ImportPath": "github.com/ellcrys/stone",
-	"GoVersion": "go1.4",
+	"GoVersion": "go1.5",
 	"Deps": [
 		{
 			"ImportPath": "github.com/ellcrys/crypto",
 			"Rev": "9dd5e35238f8e78651800270e7f3de6798a7895d"
 		},
 		{
-			"ImportPath": "github.com/nu7hatch/gouuid",
-			"Rev": "179d4d0c4d8d407a32af483c2354df1d2c91e6c3"
+			"ImportPath": "github.com/ellcrys/util",
+			"Rev": "081c2b5f0b14687dbfaf3d2fd4fa24bc875e0ee5"
+		},
+		{
+			"ImportPath": "github.com/satori/go.uuid",
+			"Rev": "242673bbc820e051ef00033e274d32e08ece9e15"
+		},
+		{
+			"ImportPath": "github.com/square/go-jose/cipher",
+			"Rev": "70a7e670bd0d4bb35902d31f3a75a6689843abed"
+		},
+		{
+			"ImportPath": "github.com/square/go-jose/json",
+			"Rev": "70a7e670bd0d4bb35902d31f3a75a6689843abed"
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",
 			"Rev": "e22aedd37671fb115be6c0c25129c405cb575cfd"
+		},
+		{
+			"ImportPath": "gopkg.in/square/go-jose.v1",
+			"Rev": "70a7e670bd0d4bb35902d31f3a75a6689843abed"
 		}
 	]
 }
