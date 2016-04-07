@@ -10,6 +10,7 @@ See [Stone Doc](http://stonedoc.org) for the stone specification.
 # Install
 ```
 go get github.com/ellcrys/stone
+
 ```
 
 # Example
