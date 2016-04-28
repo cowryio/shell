@@ -383,7 +383,7 @@ func TestEncodeSuccessfully(t *testing.T) {
 	sh, err := Create(meta, util.ReadFromFixtures("tests/fixtures/rsa_priv_1.txt"))
 	assert.Nil(t, err)
 	enc, _ := util.MapToJSON(sh.Signatures)
-	expectedEncodeVal := crypto.ToBase64([]byte(enc))
+	expectedEncodeVal := crypto.ToBase64Raw([]byte(enc))
 	assert.Equal(t, sh.Encode(), expectedEncodeVal)
 }
 
@@ -418,7 +418,7 @@ func TestTokenToBlockWithInvalidPayload(t *testing.T) {
 
 // TestTokenToBlockWithMalformedJSONInPayload test that an error occurs if payload data is malformed
 func TestTokenToBlockWithMalformedJSONInPayload(t *testing.T) {
-	malformedJSONPayload := crypto.ToBase64([]byte(`{ "field": "value" `))
+	malformedJSONPayload := crypto.ToBase64Raw([]byte(`{ "field": "value" `))
 	_, err := TokenToBlock("abcde."+malformedJSONPayload+".xyz", "meta")
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "malformed meta block")

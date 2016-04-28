@@ -38,8 +38,8 @@ func Empty() *Stone {
 	return initialize(sh)
 }
 
-// Create a stone with a inital meta block
-// The new stone is immediately signed using the issuer's private key
+// Create a stone with an inital meta block.
+// The new stone is immediately signed using the issuer private key.
 func Create(meta map[string]interface{}, issuerPrivateKey string) (*Stone, error) {
 
 	stone := initialize(&Stone{})
@@ -59,9 +59,7 @@ func Create(meta map[string]interface{}, issuerPrivateKey string) (*Stone, error
 	return stone, nil
 }
 
-// Creates a stone from a map. Validation of expected field is 
-// not performed. Use Validate() before calling this method if validation
-// is necessary
+// Creates a stone from a map data structure. Validation is not performed. 
 func loadMap(data map[string]interface{}) (*Stone, error) {
 
 	var stone = initialize(&Stone{})
@@ -89,7 +87,7 @@ func loadMap(data map[string]interface{}) (*Stone, error) {
     return stone, nil
 }
 
-// Creates a new stone from a json string. It does not attempt to sign the blocks. 
+// Creates a new stone from a json string. 
 func Load(stoneStr string) (*Stone, error) {
 
 	// empty string not allowed
@@ -102,8 +100,8 @@ func Load(stoneStr string) (*Stone, error) {
 }
 
 
-// Create a stone from a json string by converting
-// it to a map and then used to load a new stone instance
+// Given a json string representing a stone, It creates
+// a new stone object.
 func LoadJSON(jsonStr string) (*Stone, error) {
 
 	data, err := util.JSONToMap(jsonStr)
@@ -195,7 +193,9 @@ func Decode(encStone string) (*Stone, error) {
 	return stone, nil
 }
 
-// Decodes a payload of a JWS token to a block
+// Given the payload section of a JWS 
+// signature, it base64url decodes and returns 
+// a map structure representing the payload
 func TokenToBlock(token string, blockName string) (map[string]interface{}, error) {
 
 	var block = map[string]interface{}{}
@@ -219,7 +219,7 @@ func TokenToBlock(token string, blockName string) (map[string]interface{}, error
 }
 
 
-// get a block or panic of block is unknown
+// Get a block, otherwise, panic
 func(self *Stone) getBlock(name string) map[string]interface{} {
 	if name == "meta" { return self.Meta }
 	if name == "ownership" { return self.Ownership }
@@ -228,7 +228,7 @@ func(self *Stone) getBlock(name string) map[string]interface{} {
 	panic("unknown block")
 }
 
-// Sign a block. The signing process takes the value of a block and signs
+// Signs a block. The signing process takes the value of a block and signs
 // it using JWS. The signature generated is included in the 
 // `signatures` block. If a block is empty or unknown, an error is returned.
 func(self *Stone) Sign(blockName string, privateKey string) (string, error) {
@@ -262,7 +262,8 @@ func(self *Stone) Sign(blockName string, privateKey string) (string, error) {
 }
 
 
-// Verify a block. Using the public of the signer
+// Verify a block's JWS signature. It expects the public key
+// part of the keypair used to sign the block. 
 func(self *Stone) Verify(blockName, signerPublicKey string) error {
 
 	signer, err := crypto.ParsePublicKey([]byte(signerPublicKey))
@@ -289,13 +290,14 @@ func(self *Stone) Verify(blockName, signerPublicKey string) error {
 	return nil
 }  
 
-// Encode a base64 url equivalent of the signatures.
+// Returns a base64url encoded string of the signatures block
 func(self *Stone) Encode() string {
 	var signaturesStr, _ = util.MapToJSON(self.Signatures)
 	return crypto.ToBase64Raw([]byte(signaturesStr))
 }
 
-// Add meta block. Validation and block signing are carried out
+// Set and sign the meta block. New block data will be validated 
+// and signed.
 func(self *Stone) AddMeta(meta map[string]interface{}, issuerPrivateKey string) error {
 
 	// validate meta
@@ -314,8 +316,8 @@ func(self *Stone) AddMeta(meta map[string]interface{}, issuerPrivateKey string) 
     return nil
 }
 
-// Assign and sign a valid ownership data to the ownership block.
-// `meta.id` property must be set. 
+// Set and sign the ownership block. New block data will be validated 
+// and signed.
 func (self *Stone) AddOwnership(ownership map[string]interface{}, issuerPrivateKey string) error {
 
 	if self.Meta["id"] == nil || (self.Meta["id"] != nil && strings.TrimSpace(self.Meta["id"].(string)) == "") {
@@ -338,8 +340,8 @@ func (self *Stone) AddOwnership(ownership map[string]interface{}, issuerPrivateK
 	return nil
 }
 
-// Assign and sign a valid attribute data to the attributes block.
-// `meta.id` property must be set. 
+// Set and sign the attributes block. New block data will be validated 
+// and signed.
 func (self *Stone) AddAttributes(attributes map[string]interface{}, issuerPrivateKey string) error {
 	
 	if self.Meta["id"] == nil || (self.Meta["id"] != nil && strings.TrimSpace(self.Meta["id"].(string)) == "") {
@@ -362,7 +364,8 @@ func (self *Stone) AddAttributes(attributes map[string]interface{}, issuerPrivat
 	return nil
 }
 
-// add a stone to the `embeds` block
+// Set and sign the embebs block. New block data will be validated 
+// and signed.
 func (self *Stone) AddEmbed(embeds map[string]interface{}, issuerPrivateKey string) error {
 
 	if self.Meta["id"] == nil || (self.Meta["id"] != nil && strings.TrimSpace(self.Meta["id"].(string)) == "") {
@@ -386,7 +389,7 @@ func (self *Stone) AddEmbed(embeds map[string]interface{}, issuerPrivateKey stri
 }
 
 
-// checks if a block has a signature
+// Checks if a block has a signature
 func(self *Stone) HasSignature(blockName string) bool {
 	switch blockName {
 	case "meta", "ownership", "attributes", "embeds":
@@ -398,19 +401,24 @@ func(self *Stone) HasSignature(blockName string) bool {
 	return false
 }
 
-// checks if a stone object current state can
-// pass as a valid stone
+// Validates the stone object.
+// Deprecated
 func(self *Stone) IsValid() error {
 	return Validate(self.JSON())
 }
 
-// return stone as raw JSON string
+// Validates the stone object
+func(self *Stone) Validate() error {
+	return Validate(self.JSON())
+}
+
+// Returns a JSON representation of the object.
 func(self *Stone) JSON() string {
 	bs, _ := json.Marshal(&self)
 	return string(bs)
 }
 
-// returns a map representation of the stone
+// Returns a map representation of the object.
 func(self *Stone) ToMap() map[string]interface{} {
 	var dat = make(map[string]interface{})
 	dat["signatures"] = self.Signatures
@@ -421,7 +429,7 @@ func(self *Stone) ToMap() map[string]interface{} {
     return dat
 }
 
-// clone a stone
+// Clone the object
 func(self *Stone) Clone() *Stone {
 	jsonStr := self.JSON()
 	stone, err := LoadJSON(jsonStr)
@@ -431,17 +439,17 @@ func(self *Stone) Clone() *Stone {
 	return stone
 }
 
-// checks if the ownership block contains any property
+// Checks whether the ownership block contains any property
 func(self *Stone) HasOwnership() bool {
 	return len(self.Ownership) > 0
 }
 
-// checks if the attributes block contains any property
+// Checks whether the attributes block contains any property
 func(self *Stone) HasAttributes() bool {
 	return len(self.Attributes) > 0
 }
 
-// checks if the embeds block contains any property
+// Checks whether the embeds block contains any property
 func(self *Stone) HasEmbeds() bool {
 	return len(self.Embeds) > 0
 }

@@ -11,7 +11,8 @@ import (
 )
 
 // the unix time that indicates the time from when
-// a meta.created_at time must start from
+// a meta.created_at time must start from.
+// This is the time when host was created.
 var START_TIME int64 = 1453975575
 
 
@@ -21,12 +22,13 @@ func SetStartTime(t int64) {
 }
 
 
-// Validate `meta` block
-// * Must not contain unknown properties
-// * A valid meta block must contain id, type and created_at properties
-// * id must be string and 40 characters in length
-// * type must be string
-// * created_at must be an interger and a valid unix date in the past but not beyond a start/launch time
+// Validate `meta` block. 
+// For a `meta` block to be considered valid:.
+// It must not contain unknown properties.
+// It must contain the following properties: `id`, `type` and `created_at`.
+// `id` property value type must be a string and 40 characters in length.
+// `type` property value type must be string.
+// `created_at` must be an interger and a valid unix date in the past but not beyond a start/launch time.
 func ValidateMetaBlock(meta map[string]interface{}) error {
 
 	var createdAt int64
@@ -98,12 +100,13 @@ func ValidateMetaBlock(meta map[string]interface{}) error {
 	return nil
 }
 
-// Validate `signature` block'
-// * must contain only acceptable properties (meta, ownership, embeds)
-// *`meta` signature must be present and must be a string type
-// *`attributes` property must be string type if set
-// *`ownership` property must be string type if set
-// *`embeds` property must be string type if set
+// Validate `signature` block.
+// For a `signature` block to be considered valid:.
+// It must contain only acceptable properties (meta, ownership, embeds).
+// `meta` signature must be present and must be a string type.
+// `attributes` property must be string type if set.
+// `ownership` property must be string type if set.
+// `embeds` property must be string type if set.
 func ValidateSignaturesBlock(signatures map[string]interface{}) error {
 
 	// must reject unexpected properties
@@ -149,17 +152,20 @@ func ValidateSignaturesBlock(signatures map[string]interface{}) error {
 }
 
 // Validate ownership block.
-// * Must not contain unknown properties
-// * A valid ownership block can only contain ref_id, type, sole and status properties.
-// * ownership.ref_id must be set and value type must be string
-// * ref_id must be equal to the meta id
-// * A valid ownership block can only contain type, sole and status properties.
-// * ownership.type must be set, value type must be a string and value must be known
-// * - if ownership.type is 'sole':
-// * - ownership.sole must be set to an object
-// * - ownership.sole.address_id must be set and it must be a string
-// * ownership.status is optional, but if set
-// *  - ownership.status must be a string value. The value must also be known
+// For an `ownership` block to be considered valid:.
+// 
+// It must not contain unknown properties.
+// A valid ownership block can only contain ref_id, type, sole and status properties.
+// `ownership.ref_id` property must be set and value type must be string.
+// `ref_id` property must be equal to the meta id.
+// A valid ownership block can only contain type, sole and status properties.
+// `ownership.type` property must be set, value type must be a string and value must be known.
+// 
+// If ownership.type is 'sole':.
+// `ownership.sole` must be set to an object.
+// `ownership.sole.address_id` must be set and it must be a string.
+// `ownership.status` is optional, but if set.
+// `ownership.status` must be a string value. The value must also be known.
 func ValidateOwnershipBlock(ownership map[string]interface{}, metaID string) error {
 
 	// must reject unexpected properties
@@ -239,11 +245,12 @@ func ValidateOwnershipBlock(ownership map[string]interface{}, metaID string) err
 
 
 // Validate attributes block.
-// * Accept only `ref_id` and `data` properties 
-// * `ref_id` property must be provided
-// * `ref_id` property must be a string
-// * `ref_id` property must equal meta id (meta.id property)
-// * `data` propert must be set
+// For an `attributes` block to be considered valid:.
+// It must accept only `ref_id` and `data` properties.
+// `ref_id` property must be provided.
+// `ref_id` property must be a string.
+// `ref_id` property must equal meta id (meta.id property).
+// `data` property must be set.
 func ValidateAttributesBlock(attributes map[string]interface{}, metaID string) error {
 
 	// must reject unexpected properties
@@ -278,12 +285,11 @@ func ValidateAttributesBlock(attributes map[string]interface{}, metaID string) e
 
 
 // Validate embeds block.
-// Rules:
-// * expects a json object as parameter
-// * must not contain expected properties other than `ref_id` and `data`
-// * ref_id must be set and should have a string value
-// * ref_id must be equal to meta id
-// * data property must be set and value type must be an array of json objects
+// For a `embeds` block to be considered valid:.
+// It must not contain only `ref_id` and `data` properties.
+// `ref_id` property must be set and should have a string value.
+// `ref_id` property must be equal to meta id.
+// `data` property must be set and value type must be an array of json objects.
 func ValidateEmbedsBlock(embeds map[string]interface{}, metaID string) error {
 
 	// must reject unexpected properties
@@ -346,8 +352,7 @@ func ValidateEmbedsBlock(embeds map[string]interface{}, metaID string) error {
 	return nil
 }
 
-// Validate a stone. This function ensures 
-// the existence of mandatory stone properties and attributes.
+// Validate a stone. 
 func Validate(stoneData interface{}) error {
 
 	var metaID string
