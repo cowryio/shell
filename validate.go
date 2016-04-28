@@ -20,7 +20,6 @@ func SetStartTime(t int64) {
 	START_TIME = t
 }
 
-
 // Validate `meta` block. 
 // 
 //  Rules:
@@ -158,7 +157,7 @@ func ValidateSignaturesBlock(signatures map[string]interface{}) error {
 // 
 //  Rules:
 // 
-//  It must not contain unknown properties.
+//  - It must not contain unknown properties.
 //  - A valid ownership block can only contain ref_id, type, sole and status properties.
 //  - `ownership.ref_id` property must be set and value type must be string.
 //  - `ref_id` property must be equal to the meta id.
@@ -252,7 +251,7 @@ func ValidateOwnershipBlock(ownership map[string]interface{}, metaID string) err
 // 
 //  Rules:
 // 
-//  It must accept only `ref_id` and `data` properties.
+//  - It must accept only `ref_id` and `data` properties.
 //  - `ref_id` property must be provided.
 //  - `ref_id` property must be a string.
 //  - `ref_id` property must equal meta id (meta.id property).
