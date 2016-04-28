@@ -22,12 +22,12 @@ func SetStartTime(t int64) {
 
 
 // Validate `meta` block. 
-// For a `meta` block to be considered valid:.
-// It must not contain unknown properties.
-// It must contain the following properties: `id`, `type` and `created_at`.
-// `id` property value type must be a string and 40 characters in length.
-// `type` property value type must be string.
-// `created_at` must be an interger and a valid unix date in the past but not beyond a start/launch time.
+//  For a `meta` block to be considered valid:.
+//  It must not contain unknown properties.
+//  It must contain the following properties: `id`, `type` and `created_at`.
+//  `id` property value type must be a string and 40 characters in length.
+//  `type` property value type must be string.
+//  `created_at` must be an interger and a valid unix date in the past but not beyond a start/launch time.
 func ValidateMetaBlock(meta map[string]interface{}) error {
 
 	var createdAt int64
