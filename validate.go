@@ -10,9 +10,8 @@ import (
 )
 
 // This is the minimum time a stone's
-// `meta.created_at` property can be have. 
-// This is the time also indicates
-// the point in time the host was created.
+// `meta.created_at` property can have. 
+// This is also the time host was created.
 var START_TIME int64 = 1453975575
 
 
