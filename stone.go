@@ -1,5 +1,6 @@
-// A stone represents a container of information
-// that is considered valueable.
+// A stone is a JWS-based object developed for
+// the sole storing, representing and signing valuable
+// digital assets.
 package stone
 
 import (
@@ -11,7 +12,7 @@ import (
 	"github.com/ellcrys/util"
 )
 
-// known block names
+// The list of recognized blocks.
 var KnownBlockNames = []string{ "meta", "ownership", "attributes", "embeds" }
 
 type Stone struct {
