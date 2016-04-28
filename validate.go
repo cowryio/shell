@@ -1,4 +1,3 @@
-// Contains validation method for stone
 package stone
 
 import (
