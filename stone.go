@@ -85,6 +85,11 @@ func loadMap(data map[string]interface{}) (*Stone, error) {
     	stone.Embeds = data["embeds"].(map[string]interface{})
     }
 
+    // add signatures
+    if signatures := data["signatures"]; signatures != nil {
+    	stone.Signatures = data["signatures"].(map[string]interface{})
+    }
+
     return stone, nil
 }
 

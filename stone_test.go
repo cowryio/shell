@@ -451,3 +451,7 @@ func TestDecodeWithSignedBlock(t *testing.T) {
 	assert.NotEqual(t, len(decStone.Meta), 0)
 	assert.Exactly(t, sh.Meta, decStone.Meta)
 }
+
+func TestDecodeWithInvalidSignature(t *testing.T) {
+	
+}
