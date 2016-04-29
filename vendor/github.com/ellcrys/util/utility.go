@@ -14,6 +14,7 @@ import (
     "path/filepath"
     "strconv"
     "io/ioutil"
+    "net/http"
 
     "github.com/satori/go.uuid"
 )
@@ -142,12 +143,26 @@ func NewID() string {
     return Sha1(id)
 }
 
-// Checks that a string slice contains a string value
-func InStringSlice(ss []string, val string) bool {
-    for _, v := range ss {
-        if v == val {
-            return true
+// Given a slice strings or a slice of interface{} where interface{}
+// must be strings. It checks to see if a string is 
+// contained in the slice. 
+func InStringSlice(list interface{}, val string) bool {
+    switch v := list.(type) {
+    case []interface{}:
+        for _, s := range v {
+            if s.(string) == val {
+                return true
+            }
         }
+        break
+    case []string:
+        for _, s := range v {
+            if s == val {
+                return true
+            }
+        }
+    default:
+        panic("unsupported type")
     }
     return false
 }
@@ -352,4 +367,71 @@ func GetJWSPayload(token string) (string, error) {
         return "", errors.New("parameter is not a valid token")
     }
     return parts[1], nil
+}
+
+
+// Read and decode json file
+func ReadJSONFile(f string) (map[string]interface{}, error) {
+
+    var key map[string]interface{}
+
+    // load file 
+    data, err := ioutil.ReadFile(f)
+    if err != nil {
+        return key, errors.New("failed to load file: " + f)
+    }
+
+    // parse file to json
+    jsonData, err := DecodeJSONToMap(string(data))
+    if err != nil {
+        return key, errors.New("failed to decode file: " + f)
+    }
+
+    return jsonData, nil
+}
+
+// Return all the ip chains of the request.
+// The first ip is the remote address and the
+// rest are extracted from the x-forwarded-for header
+func GetIPs(req *http.Request) []string {
+
+    var ips []string
+    var remoteAddr = req.RemoteAddr
+    if remoteAddr != "" {
+        ipParts := strings.Split(remoteAddr, ":")
+        ips = append(ips, ipParts[0])
+    }
+    
+    // fetch ips in x-forwarded-for header
+    var xForwardedFor = strings.TrimSpace(req.Header.Get("x-forwarded-for"))
+    if xForwardedFor != "" {
+        xForwardedForParts := strings.Split(xForwardedFor, ", ")
+        for _, ip := range xForwardedForParts {
+            if !InStringSlice(ips, ip) {
+                ips = append(ips, ip)
+            }
+        }
+    }
+
+    return ips
+}
+
+// Create an http GET request
+func NewGetRequest(url string, headers map[string]string) (*http.Response, error) {
+    client := &http.Client{}
+    req, _ := http.NewRequest("GET", url, strings.NewReader(""))
+    for key, val := range headers {
+        req.Header.Set(key, val)
+    }
+    return client.Do(req)
+}
+
+// Create a http POST request
+func NewPostRequest(url, body string, headers map[string]string) (*http.Response, error) {
+    client := &http.Client{}
+    req, _ := http.NewRequest("POST", url, strings.NewReader(body))
+    for key, val := range headers {
+        req.Header.Set(key, val)
+    }
+    return client.Do(req)
 }

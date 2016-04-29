@@ -1,14 +1,20 @@
 {
-	"ImportPath": "github.com/ellcrys/stone",
-	"GoVersion": "go1.5",
+	"ImportPath": "github.com/stonedoc/stone",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v62",
 	"Deps": [
 		{
+			"ImportPath": "github.com/dgrijalva/jwt-go",
+			"Comment": "v2.3.0-1-g9fe8afe",
+			"Rev": "9fe8afe96d32468fba230b8b22acea86251f0506"
+		},
+		{
 			"ImportPath": "github.com/ellcrys/crypto",
-			"Rev": "9dd5e35238f8e78651800270e7f3de6798a7895d"
+			"Rev": "5061bbe142a75c2c40453b6bd12f9e8c16010496"
 		},
 		{
 			"ImportPath": "github.com/ellcrys/util",
-			"Rev": "081c2b5f0b14687dbfaf3d2fd4fa24bc875e0ee5"
+			"Rev": "93298d5833caab4232cd94b8fdd3d498fd044692"
 		},
 		{
 			"ImportPath": "github.com/satori/go.uuid",
