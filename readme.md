@@ -9,7 +9,7 @@ See [Stone Doc](http://stonedoc.org) for the stone specification.
 
 # Install
 ```
-go get github.com/ellcrys/stone
+go get github.com/stonedoc/stone
 
 ```
 
@@ -17,7 +17,7 @@ go get github.com/ellcrys/stone
 
 ```Go
 import (
-   Stone "github.com/ellcrys/stone"
+   Stone "github.com/stonedoc/stone"
 )
 
 func main(){
